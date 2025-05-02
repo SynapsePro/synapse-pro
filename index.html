@@ -60,8 +60,8 @@
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: var(--body-bg); color: var(--text-color); display: flex; flex-direction: column; height: 100vh; overflow: hidden; transition: background-color 0.3s, color 0.3s; }
 
-        /* Prompt Bar (Visually Hidden) */
-        #prompt-bar { display: flex; align-items: center; padding: 1px 5px; background-color: var(--prompt-bar-bg); flex-shrink: 0; height: auto; overflow: hidden; transition: background-color 0.3s; }
+        /* Prompt Bar (Visually Hidden for Automation) */
+        #prompt-bar { display: flex; align-items: center; padding: 1px 5px; background-color: var(--prompt-bar-bg); flex-shrink: 0; height: auto; overflow: hidden; transition: background-color 0.3s; /* Initially tiny or hidden */ }
         #prompt-input { flex-grow: 1; padding: 0 2px; font-size: 1px; height: auto; border: 1px solid var(--prompt-bar-bg); border-radius: 3px 0 0 3px; background-color: var(--prompt-bar-bg); color: var(--prompt-bar-bg); border-right: none; outline: none; box-shadow: none; transition: background-color 0.3s, border-color 0.3s, color 0.3s; line-height: 1; }
         #prompt-input::placeholder { color: var(--prompt-bar-bg); opacity: 1; }
         #prompt-input:focus { border-color: var(--prompt-bar-bg); box-shadow: none; }
@@ -73,24 +73,22 @@
         #response-output { flex-grow: 1; overflow-y: auto; padding: 25px; background-color: var(--body-bg); display: flex; flex-direction: column; transition: background-color 0.3s; background-image: url('logo.png'); background-repeat: no-repeat; background-position: center 70%; background-size: 250px auto; background-attachment: fixed; }
 
         /* Bot Messages */
-        .message.bot-message { background-color: var(--response-bg); color: var(--text-color); padding: 15px 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); margin-bottom: 20px; max-width: 100%; line-height: 1.6; white-space: normal; /* Changed for <br> */ transition: background-color 0.3s, color 0.3s, border-color 0.3s; position: relative; z-index: 1; border: 1px solid var(--button-send-bg); }
+        .message.bot-message { background-color: var(--response-bg); color: var(--text-color); padding: 15px 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); margin-bottom: 20px; max-width: 100%; line-height: 1.6; white-space: normal; /* Allows <br> to work */ transition: background-color 0.3s, color 0.3s, border-color 0.3s; position: relative; z-index: 1; border: 1px solid var(--button-send-bg); }
         [data-theme="dark"] .message.bot-message { box-shadow: 0 2px 5px rgba(0,0,0,0.2); border-color: var(--button-send-bg); }
 
-        /* Styling for HTML elements INSIDE bot messages */
+        /* Styling for HTML elements INSIDE bot messages (colors set by AI inline style) */
         .message.bot-message strong { font-weight: 600; }
         .message.bot-message em { font-style: italic; }
-        .message.bot-message span[style*="color"] { font-weight: 500; /* Style for text color highlights */ }
-        .message.bot-message span[style*="background-color"] { padding: 0.1em 0.3em; border-radius: 3px; /* Style for background highlights */ }
-        /* The actual colors are set inline by the AI via the backend prompt */
+        .message.bot-message span[style*="color"] { font-weight: 500; /* Slightly bolder for color terms */ }
+        .message.bot-message span[style*="background-color"] { padding: 0.1em 0.3em; border-radius: 3px; /* Padding for background concepts */ }
 
         /* Initial Message */
-        .message.initial-message { padding: 25px; text-align: center; border: 1px solid var(--button-send-bg); /* background-color: rgba(255, 255, 255, 0.8); */ }
-        /* [data-theme="dark"] .message.initial-message { background-color: rgba(52, 58, 64, 0.8); } */
+        .message.initial-message { padding: 25px; text-align: center; border: 1px solid var(--button-send-bg); }
         .start-gif { display: block; margin: 0 auto 25px auto; max-width: var(--start-gif-max-width); height: auto; }
         .initial-message .intro-line { margin-bottom: 0; font-weight: 600; }
 
         /* Thinking/Loading Indicator */
-        .thinking-message { text-align: center; font-style: italic; color: var(--placeholder-color); background-color: transparent; box-shadow: none; padding: 10px; margin-bottom: 20px; transition: color 0.3s; position: relative; z-index: 1; border: none; }
+        .thinking-message { text-align: center; font-style: italic; color: var(--placeholder-color); background-color: transparent; box-shadow: none; padding: 10px; margin-bottom: 20px; transition: color 0.3s; position: relative; z-index: 1; border: none; /* No border for thinking message */ }
         .loading-gif { display: block; height: var(--loading-gif-height); width: auto; margin: 0 auto 10px auto; }
 
         /* Error Message */
@@ -129,7 +127,7 @@
 <body>
     <!-- HTML Structure -->
     <div id="prompt-bar">
-        <input type="text" id="prompt-input" placeholder="Automation...">
+        <input type="text" id="prompt-input" placeholder="Automation..." autocomplete="off">
         <button id="go-button">Go</button>
     </div>
 
@@ -143,7 +141,7 @@
     </main>
 
     <div id="input-area">
-        <input type="text" id="user-input" placeholder="Ask something...">
+        <input type="text" id="user-input" placeholder="Ask something..." autocomplete="off">
         <button id="send-button">Send</button>
     </div>
 
@@ -167,245 +165,302 @@
         const darkModeToggle = document.getElementById('darkmode-toggle');
 
         // --- CONFIGURATION ---
-        const BACKEND_API_URL = '/api/chat'; // Relative path to the Vercel serverless function
-        const MAX_HISTORY_LENGTH = 10; // Max messages (user + assistant pairs) in history
+        const BACKEND_API_URL = '/api/chat'; // Relative path to the Vercel serverless function (Backend)
+        const MAX_HISTORY_LENGTH = 10; // Max number of turns (1 turn = 1 user + 1 assistant message)
 
         // --- Global State ---
-        let chatHistory = [];
+        let chatHistory = []; // Stores conversation history as { role: 'user'/'assistant', content: '...' }
         // System Prompt is defined securely in the backend (api/chat.js)
 
         // --- Event Listeners ---
+        // Listener for the hidden "Go" button (triggered by Anki Addon via handleSend)
         goButton.addEventListener('click', () => handleSend(promptInput));
+        // Allow Enter key in hidden prompt input (might be useful for testing)
         promptInput.addEventListener('keypress', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(promptInput); } });
+
+        // Listener for the visible "Send" button (for user interaction)
         sendButton.addEventListener('click', () => handleSend(userInput));
+        // Allow Enter key in user input field
         userInput.addEventListener('keypress', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(userInput); } });
+
+        // Listener for the dark mode toggle
         darkModeToggle.addEventListener('change', toggleTheme);
 
-        // --- Functions ---
+        // --- Core Functions ---
+
+        /**
+         * Toggles the theme between light and dark and saves the preference.
+         */
         function toggleTheme() {
-             if (darkModeToggle.checked) { document.documentElement.setAttribute('data-theme', 'dark'); localStorage.setItem('theme', 'dark'); }
-             else { document.documentElement.removeAttribute('data-theme'); localStorage.setItem('theme', 'light'); }
-        }
-        function applySavedTheme() {
-            const savedTheme = localStorage.getItem('theme');
-            if (savedTheme === 'dark') { darkModeToggle.checked = true; document.documentElement.setAttribute('data-theme', 'dark'); }
-            else { darkModeToggle.checked = false; document.documentElement.removeAttribute('data-theme'); }
+             if (darkModeToggle.checked) {
+                 document.documentElement.setAttribute('data-theme', 'dark');
+                 localStorage.setItem('theme', 'dark');
+             } else {
+                 document.documentElement.removeAttribute('data-theme');
+                 localStorage.setItem('theme', 'light');
+             }
         }
 
         /**
-         * Creates a message element for the chat interface.
-         * Uses innerHTML for bot messages to render HTML formatting from the backend.
+         * Applies the saved theme preference on page load.
+         */
+        function applySavedTheme() {
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme === 'dark') {
+                darkModeToggle.checked = true;
+                document.documentElement.setAttribute('data-theme', 'dark');
+            } else {
+                 // Default to light theme if nothing saved or saved as light
+                darkModeToggle.checked = false;
+                document.documentElement.removeAttribute('data-theme');
+            }
+        }
+
+        /**
+         * Creates a message div element for the chat interface.
+         * IMPORTANT: Uses `innerHTML` for bot messages to render HTML sent from the backend.
+         * Assumes the backend sanitizes or generates safe HTML based on the system prompt.
+         *
+         * @param {string} text - The message content (plain text for errors, HTML for bot replies).
+         * @param {string} [type='bot'] - The type of message ('bot').
+         * @param {boolean} [isThinking=false] - If true, displays a loading indicator.
+         * @param {boolean} [isError=false] - If true, applies error styling.
+         * @returns {HTMLDivElement} The created message element.
          */
         function createMessageElement(text, type = 'bot', isThinking = false, isError = false) {
              const messageDiv = document.createElement('div');
-             messageDiv.classList.add('message');
+             messageDiv.classList.add('message'); // Base class
+
              if (isThinking) {
                  messageDiv.classList.add('thinking-message'); // Special styling, no border
-                 const img = document.createElement('img'); img.src = 'loading.gif'; img.alt = 'Loading...'; img.classList.add('loading-gif'); messageDiv.appendChild(img);
-                 const textNode = document.createTextNode('Analyzing...'); // Generic thinking message
+                 const img = document.createElement('img');
+                 img.src = 'loading.gif'; // Ensure loading.gif is accessible
+                 img.alt = 'Loading...';
+                 img.classList.add('loading-gif');
+                 messageDiv.appendChild(img);
+                 const textNode = document.createTextNode('Analyzing...'); // Thinking text
                  messageDiv.appendChild(textNode);
-                 messageDiv.dataset.thinkingId = `thinking-${Date.now()}`; // Unique ID to find later
+                 messageDiv.dataset.thinkingId = `thinking-${Date.now()}`; // Unique ID to find/replace later
              } else if (isError) {
-                 messageDiv.classList.add('bot-message', 'error-message'); // Inherits bot border + error styles
-                 messageDiv.textContent = text; // Display error as plain text
+                 messageDiv.classList.add('bot-message', 'error-message'); // Use bot message structure but with error style
+                 messageDiv.textContent = text; // Display errors as plain text for safety
              } else if (type === 'bot') {
-                 messageDiv.classList.add('bot-message'); // Standard bot message with border
-                 // *** CRITICAL: Using innerHTML to render HTML from the backend ***
-                 // This relies on the backend sending safe, sanitized HTML.
-                 // Ensure your backend prompt enforces allowed tags only.
+                 messageDiv.classList.add('bot-message'); // Standard bot message style
+                 // *** CRITICAL: Render HTML content from backend ***
+                 // Ensure your backend /api/chat.js is configured with a system prompt
+                 // that strictly enforces the generation of safe, expected HTML tags.
                  messageDiv.innerHTML = text;
              }
-             // Note: User messages are not directly displayed, only sent to backend
+             // User messages aren't displayed directly in this version, only sent.
             return messageDiv;
         }
 
         /**
-         * Scrolls the chat output area to the bottom smoothly.
+         * Scrolls the chat output container to the bottom smoothly.
          */
         function scrollToBottom() {
-            // Use timeout to ensure rendering is complete before scrolling
+            // Use a small timeout to allow the DOM to update before scrolling
             setTimeout(() => {
                 responseOutput.scrollTo({
                     top: responseOutput.scrollHeight,
-                    behavior: 'smooth'
+                    behavior: 'smooth' // Use smooth scrolling
                 });
-            }, 50);
+            }, 50); // 50ms delay seems reasonable
         }
 
         /**
          * Generates follow-up suggestion buttons below a bot message.
+         * @param {HTMLDivElement} messageElement - The bot message element to append buttons to.
          */
         function generateFollowUpButtons(messageElement) {
             const buttonArea = document.createElement('div');
             buttonArea.classList.add('follow-up-buttons');
-            // Define follow-up suggestions
+            // Example follow-up suggestions
             const suggestions = ["Explain further", "Give an example", "Make it simpler"];
+
             suggestions.forEach(suggestion => {
                 const button = document.createElement('button');
                 button.textContent = suggestion;
                 button.onclick = () => {
-                    // Remove all existing follow-up buttons immediately
+                    // Remove all follow-up buttons before sending new message
                     const oldButtonAreas = responseOutput.querySelectorAll('.follow-up-buttons');
                     oldButtonAreas.forEach(area => area.remove());
-                    // Populate user input and trigger send
+                    // Set suggestion as user input and trigger send
                     userInput.value = suggestion;
-                    handleSend(userInput); // Send the suggestion as a new user message
+                    handleSend(userInput); // Treat follow-up click like user input
                 };
                 buttonArea.appendChild(button);
             });
+
             messageElement.appendChild(buttonArea);
-            scrollToBottom(); // Ensure buttons are visible
+            scrollToBottom(); // Ensure buttons are visible after adding
         }
 
         /**
-         * Handles sending the message from either input field to the backend API.
+         * Handles sending a message to the backend API.
+         * This function is called by event listeners AND can be called directly
+         * by external scripts (like the Anki addon) via `window.handleSend(element)`.
+         *
+         * @param {HTMLInputElement} inputElement - The input element that triggered the send
+         *                                         (#prompt-input or #user-input).
          */
         async function handleSend(inputElement) {
+            if (!inputElement) {
+                 console.error("handleSend called without valid input element.");
+                 return;
+            }
+
             const inputText = inputElement.value.trim();
 
-            // Don't send if the main user input is empty
+            // Prevent sending empty messages *only* from the main user input field
             if (!inputText && inputElement.id === 'user-input') {
                 return;
             }
-            // Allow sending from prompt-bar even if empty (e.g., triggered by external tool)
+            // Allow automation (prompt-bar) to send potentially empty strings if needed
 
-            // Remove any existing follow-up buttons before sending
+            // --- UI Preparation ---
+            // Remove any previous follow-up buttons
             const oldButtonAreas = responseOutput.querySelectorAll('.follow-up-buttons');
             oldButtonAreas.forEach(area => area.remove());
 
-            // Disable input elements during the request
+            // Disable all input controls during processing
             promptInput.disabled = true;
             goButton.disabled = true;
             userInput.disabled = true;
             sendButton.disabled = true;
 
-            // Clear the user input field after getting the text
+            // Clear the *user's* input field after capturing value. Don't clear automation input.
             if (inputElement.id === 'user-input') {
                  inputElement.value = '';
             }
 
-            // Show thinking indicator only for messages from the user input area
+            // Determine if this action should update the UI (user-initiated)
+            const isUserInteraction = (inputElement.id === 'user-input');
             let thinkingMsgElement = null;
-            if (inputElement.id === 'user-input') {
+
+            if (isUserInteraction) {
+                // Hide the initial message and background logo on the first user message
                 const initialMessage = responseOutput.querySelector('.initial-message');
-                // Hide initial message and background logo on first user interaction
                 if (initialMessage && initialMessage.style.display !== 'none') {
                     initialMessage.style.display = 'none';
-                    responseOutput.style.backgroundImage = 'none'; // Remove background logo
+                    responseOutput.style.backgroundImage = 'none'; // Hide logo background
                 }
+                // Display thinking indicator in the chat window
                 thinkingMsgElement = createMessageElement('', 'bot', true);
                 responseOutput.appendChild(thinkingMsgElement);
                 scrollToBottom();
+            } else {
+                console.log("Automation prompt received:", inputText); // Log automation input
             }
 
+            // --- API Call ---
             try {
-                // Send the request to the secure backend endpoint
+                console.log(`Sending to backend: ${inputText.substring(0, 50)}...`);
                 const response = await fetch(BACKEND_API_URL, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        userMessage: inputText, // Send the raw user text
-                        chatHistory: chatHistory // Send the current chat history
+                        userMessage: inputText,
+                        chatHistory: chatHistory // Send conversation context
                     })
                 });
 
-                // Find the thinking message element to replace it (if it exists)
+                // Find the thinking message (if it was created) to replace it later
                 const currentThinkingElement = thinkingMsgElement
                     ? responseOutput.querySelector(`[data-thinking-id="${thinkingMsgElement.dataset.thinkingId}"]`)
                     : null;
 
-                // Handle errors from the backend API
+                // --- Handle API Response ---
                 if (!response.ok) {
-                    let errorData;
+                    // Attempt to parse error message from backend JSON response
+                    let errorData = { error: `API Error: ${response.statusText} (Status: ${response.status})` }; // Default
                     try {
-                        errorData = await response.json(); // Try to parse JSON error from backend
-                    } catch (e) {
-                        errorData = { error: `API Error: ${response.statusText} (Status: ${response.status})` }; // Fallback error
-                    }
-                    console.error('Backend/API Error:', response.status, errorData);
-                    const errorMessage = `Error ${response.status}: ${errorData.error || response.statusText}`;
+                        const jsonError = await response.json();
+                        if (jsonError && jsonError.error) {
+                           errorData.error = `Error ${response.status}: ${jsonError.error}`;
+                        }
+                    } catch (e) { /* Ignore parsing error, use default */ }
 
-                    // Display error message only if it originated from user input
+                    console.error('Backend/API Error:', response.status, errorData.error);
+
+                    // Display error in UI only if user-initiated
                     if (currentThinkingElement) {
-                         const errorElement = createMessageElement(errorMessage, 'bot', false, true);
+                         const errorElement = createMessageElement(errorData.error, 'bot', false, true);
                          currentThinkingElement.replaceWith(errorElement);
                     } else {
-                        // Log errors from prompt-bar in console, don't clutter UI
-                        console.error("Error from prompt-bar request:", errorMessage);
+                         console.error("Error occurred during automation request:", errorData.error); // Log automation errors
                     }
-                    return; // Stop further processing on error
+                    return; // Stop processing on error
                 }
 
                 // Process successful response
                 const data = await response.json();
 
                 if (data.choices && data.choices.length > 0 && data.choices[0].message) {
-                    const botReplyHtml = data.choices[0].message.content; // Expecting HTML string
+                    const botReplyHtml = data.choices[0].message.content; // Expecting HTML string from backend
 
-                    // Add conversation turn to history
-                    // Store the raw user text and the HTML reply from the bot
+                    // Add the current turn to chat history
                     chatHistory.push({ role: "user", content: inputText });
-                    chatHistory.push({ role: "assistant", content: botReplyHtml });
+                    chatHistory.push({ role: "assistant", content: botReplyHtml }); // Store HTML response
 
-                    // Limit history length
-                    if (chatHistory.length > MAX_HISTORY_LENGTH * 2) { // *2 because each turn has user and assistant
-                        // Remove the oldest pair (user + assistant message)
-                        chatHistory = chatHistory.slice(2);
+                    // Limit history length (remove oldest turn if limit exceeded)
+                    // MAX_HISTORY_LENGTH refers to turns (user+assistant pairs)
+                    if (chatHistory.length > MAX_HISTORY_LENGTH * 2) {
+                        chatHistory = chatHistory.slice(2); // Remove the first two items (oldest user/assistant pair)
                     }
 
-                    // Display the bot's HTML reply only if initiated by user input
+                    // Update UI only if user-initiated
                     if (currentThinkingElement) {
-                         const replyElement = createMessageElement(botReplyHtml, 'bot'); // Render the HTML
+                         const replyElement = createMessageElement(botReplyHtml, 'bot'); // Render HTML reply
                          currentThinkingElement.replaceWith(replyElement);
-                         generateFollowUpButtons(replyElement); // Add follow-up buttons
+                         generateFollowUpButtons(replyElement); // Add follow-up buttons if needed
                     } else {
-                         // Log replies to prompt-bar requests in console (optional)
-                         console.log("Reply to prompt-bar request (HTML):", botReplyHtml);
-                         // Do not display prompt-bar replies in the UI
+                        // Log the successful reply from automation (don't display in UI)
+                        console.log("Automation reply received (HTML):", botReplyHtml.substring(0, 100) + "...");
                     }
 
                 } else if (data.error) {
-                     // Handle controlled errors reported by the backend (e.g., validation)
+                     // Handle controlled errors reported by the backend itself
                      console.error('Backend returned controlled error:', data.error);
                      const errorMessage = `Backend Error: ${data.error}`;
                      if (currentThinkingElement) {
                          const errorElement = createMessageElement(errorMessage, 'bot', false, true);
                          currentThinkingElement.replaceWith(errorElement);
                      } else {
-                         console.error("Controlled error from prompt-bar request:", errorMessage);
+                         console.error("Controlled backend error during automation:", errorMessage);
                      }
                      return; // Stop processing
                 } else {
-                    // Handle unexpected response structure
-                    throw new Error('Unexpected response structure from backend.');
+                    // Handle unexpected successful response format
+                    throw new Error('Unexpected success response structure from backend.');
                 }
 
             } catch (error) {
-                // Handle network errors or other exceptions during fetch/processing
-                console.error('Error communicating with backend:', error);
+                // Handle network errors or other JS exceptions during fetch/processing
+                console.error('Error during communication or processing:', error);
                 const currentThinkingElement = thinkingMsgElement
                     ? responseOutput.querySelector(`[data-thinking-id="${thinkingMsgElement.dataset.thinkingId}"]`)
                     : null;
                 const displayError = `Communication Error: ${error.message}`;
 
+                // Display error in UI only if user-initiated
                 if (currentThinkingElement) {
                     const errorElement = createMessageElement(displayError, 'bot', false, true);
                     currentThinkingElement.replaceWith(errorElement);
                 } else {
-                     console.error("Communication error during prompt-bar request:", displayError);
+                     console.error("Communication error during automation:", displayError);
                 }
 
             } finally {
-                // Re-enable input elements regardless of success or failure
+                // --- UI Cleanup ---
+                // Re-enable all input controls regardless of success/failure
                 promptInput.disabled = false;
                 goButton.disabled = false;
                 userInput.disabled = false;
                 sendButton.disabled = false;
 
-                // Set focus back to user input and scroll down if the interaction was visible
-                if (inputElement.id === 'user-input' || thinkingMsgElement) {
+                // Focus user input and scroll down only if it was a user interaction
+                if (isUserInteraction) {
                      userInput.focus();
                      scrollToBottom();
                 }
@@ -413,8 +468,14 @@
         }
 
         // --- Initialization ---
-        applySavedTheme(); // Apply saved light/dark mode preference
-        userInput.focus(); // Focus the main input field on load
+        // Define handleSend globally so it's accessible via window.handleSend
+        window.handleSend = handleSend;
+
+        // Apply saved theme (light/dark) on load
+        applySavedTheme();
+
+        // Set initial focus on the user input field
+        userInput.focus();
 
     </script>
 </body>
