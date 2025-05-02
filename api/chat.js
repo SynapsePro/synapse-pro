@@ -22,19 +22,27 @@ export default async function handler(req, res) {
 
         // 3. API-Key SICHER aus Umgebungsvariablen holen
         const apiKey = process.env.OPENROUTER_API_KEY;
-        // UPDATED: Use gpt-4o-mini as default if OPENROUTER_MODEL_NAME is not set
+        // Standardmodell bleibt gpt-4o-mini oder was in der Env Var steht
         const modelName = process.env.OPENROUTER_MODEL_NAME || 'openai/gpt-4o-mini';
 
         if (!apiKey) {
             console.error('FEHLER: OPENROUTER_API_KEY nicht in Umgebungsvariablen gesetzt!');
-            // Gib keine detaillierte Fehlermeldung an den Client zurück
             return res.status(500).json({ error: 'Serverkonfigurationsfehler.' });
         }
 
-        // 4. System Prompt definieren
+        // 4. System Prompt definieren - UPDATED
         const systemPrompt = {
             role: "system",
-            content: "You are Synapse Pro, a helpful assistant for medical students, explaining Anki cards. Always respond in the language used by the user in their last prompt. Format your answers clearly and use Markdown for emphasis."
+            content: `You are Synapse Pro, a helpful assistant for medical students, explaining Anki cards. Always respond in the language used by the user in their last prompt.
+**CRITICAL FORMATTING INSTRUCTION:** Format your *entire* response using standard HTML tags for emphasis and highlighting. Do **NOT** use Markdown syntax like **bold** or *italic*. You MUST use the specified HTML tags.
+*   Use \`<strong>\` for general bold text (like headings or main points).
+*   Use \`<em>\` for italics if needed.
+*   Use \`<br>\` for line breaks instead of newline characters.
+*   Highlight important medical terms/drugs using \`<span style='color: var(--highlight-color-term, #005EB8);'>Term</span>\`. (Use the CSS variable --highlight-color-term if possible, otherwise default blue)
+*   Highlight key concepts or definitions using \`<span style='background-color: var(--highlight-bg-concept, #FFFACD);'>Concept</span>\`. (Use the CSS variable --highlight-bg-concept if possible, otherwise default light yellow)
+Example Input: **HIV** causes **AIDS**.
+Example CORRECT HTML Output: \`<strong><span style='color: var(--highlight-color-term, #005EB8);'>HIV</span></strong> causes <span style='background-color: var(--highlight-bg-concept, #FFFACD);'>AIDS</span>.<br>\`
+Ensure the explanation remains clear, accurate, and medically sound.`
         };
 
         // 5. Nachrichten-Array für OpenRouter zusammenstellen
@@ -46,47 +54,38 @@ export default async function handler(req, res) {
 
         // 6. OpenRouter API-Endpunkt und Header vorbereiten
         const openRouterUrl = 'https://openrouter.ai/api/v1/chat/completions';
-        // Vercel stellt die URL zur Verfügung, nützlich für Header
         const siteUrl = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000';
-        const appTitle = process.env.SITE_TITLE || 'Synapse Pro Chat'; // Optional: Site Title aus Env Var
+        const appTitle = process.env.SITE_TITLE || 'Synapse Pro Chat';
 
         // 7. Fetch-Aufruf an OpenRouter (vom Backend!)
         const response = await fetch(openRouterUrl, {
             method: 'POST',
             headers: {
-                'Authorization': `Bearer ${apiKey}`, // Der geheime Key!
+                'Authorization': `Bearer ${apiKey}`,
                 'Content-Type': 'application/json',
-                // Optionale, aber empfohlene Header für OpenRouter:
                 'HTTP-Referer': siteUrl,
                 'X-Title': appTitle
             },
             body: JSON.stringify({
-                model: modelName, // Jetzt standardmäßig gpt-4o-mini
+                model: modelName,
                 messages: messagesToSend,
-                // Weitere Parameter wie temperature, max_tokens etc. könnten hier hin
-                // temperature: 0.7,
+                // temperature: 0.7, // Beispiel für weitere Parameter
             })
         });
 
         // 8. Antwort von OpenRouter verarbeiten
-        // Fehler von OpenRouter abfangen
         if (!response.ok) {
-            // Versuche, die Fehlermeldung von OpenRouter zu lesen
-            const errorData = await response.json().catch(() => ({ // Fallback, falls Antwort kein JSON ist
+            const errorData = await response.json().catch(() => ({
                 error: { message: `OpenRouter Fehler: ${response.statusText}` }
             }));
             console.error('OpenRouter API Error:', response.status, errorData);
-             // Gib den Status von OpenRouter und eine generische Fehlermeldung zurück
-             // Beachte: OpenRouter sendet oft Details im `error`-Objekt
              const errorMessage = errorData?.error?.message || response.statusText;
              return res.status(response.status).json({ error: `API Fehler (${response.status}): ${errorMessage}` });
         }
 
-        // Erfolgreiche Antwort von OpenRouter
         const data = await response.json();
 
         // 9. Erfolgreiche Antwort an das Frontend zurücksenden
-        // Das Frontend erwartet das 'choices'-Array etc. direkt im Body
         res.status(200).json(data);
 
     } catch (error) {
