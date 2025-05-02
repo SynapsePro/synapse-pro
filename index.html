@@ -3,23 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Synapse Pro - Chat Assistant</title>
+    <title>Synapse Pro - Chat Assistant</title> <!-- Changed Title slightly -->
     <!-- Import Inter Font -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 
     <style>
-        /* CSS incorporates the styles for HTML highlighting and new layout */
+        /* CSS FROM THE "OLD WORKING" VERSION (provided last) */
         :root {
-            --body-bg: #F6F6F6;
-            --prompt-bar-bg: var(--body-bg);
+            /* Colors from old version */
+            --header-bar-bg: #0071D3;
+            --header-text: #ffffff;
+            --body-bg: #f7f7f8;
+            --prompt-bar-bg: var(--header-bar-bg); /* Blue for hidden top bar */
             --response-bg: #ffffff;
             --text-color: #212529;
             --border-color: #dee2e6;
             --input-bg: #ffffff;
             --placeholder-color: #6c757d;
-            --button-send-bg: #0071D3; /* Used for send button and message border */
+            --button-send-bg: #0071D3;
             --button-send-text: #ffffff;
             --footer-text: #6c757d;
             --loading-gif-height: 60px;
@@ -27,17 +30,20 @@
             --followup-button-bg: #e9ecef;
             --followup-button-text: #495057;
             --followup-button-border: #ced4da;
-            /* Hidden prompt bar styles */
+            /* Hidden prompt bar button colors (made transparent) */
             --button-go-bg: var(--prompt-bar-bg);
             --button-go-text: var(--prompt-bar-bg);
-             /* Colors for AI-generated HTML highlighting */
-            --highlight-color-term: #005EB8; /* Dark Blue */
-            --highlight-bg-concept: #FFFACD; /* Light Yellow (LemonChiffon) */
+             /* Add variables for HTML highlighting (needed by JS/Backend) */
+            --highlight-color-term: #005EB8;
+            --highlight-bg-concept: #FFFACD;
         }
 
+        /* --- DARK MODE Variables --- */
         [data-theme="dark"] {
+             /* Colors from old dark mode */
+            --header-bar-bg: #005eb8;
+            --header-text: #e0e0e0;
             --body-bg: #212529;
-            --prompt-bar-bg: var(--body-bg);
             --response-bg: #343a40;
             --text-color: #f8f9fa;
             --border-color: #495057;
@@ -49,71 +55,69 @@
             --followup-button-bg: #495057;
             --followup-button-text: #f8f9fa;
             --followup-button-border: #6c757d;
-            /* Hidden prompt bar styles */
-            --button-go-bg: var(--prompt-bar-bg);
-            --button-go-text: var(--prompt-bar-bg);
-             /* Colors for AI-generated HTML highlighting (Dark Mode) */
-             --highlight-color-term: #4dabf7; /* Lighter Blue */
-             --highlight-bg-concept: #696440; /* Darker Yellow */
+             /* Add variables for HTML highlighting (Dark Mode) */
+             --highlight-color-term: #4dabf7;
+             --highlight-bg-concept: #696440;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: var(--body-bg); color: var(--text-color); display: flex; flex-direction: column; height: 100vh; overflow: hidden; transition: background-color 0.3s, color 0.3s; }
 
-        /* Prompt Bar (Visually Hidden for Automation) */
-        #prompt-bar { display: flex; align-items: center; padding: 1px 5px; background-color: var(--prompt-bar-bg); flex-shrink: 0; height: auto; overflow: hidden; transition: background-color 0.3s; /* Initially tiny or hidden */ }
-        #prompt-input { flex-grow: 1; padding: 0 2px; font-size: 1px; height: auto; border: 1px solid var(--prompt-bar-bg); border-radius: 3px 0 0 3px; background-color: var(--prompt-bar-bg); color: var(--prompt-bar-bg); border-right: none; outline: none; box-shadow: none; transition: background-color 0.3s, border-color 0.3s, color 0.3s; line-height: 1; }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--body-bg);
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden; /* Prevent body scrolling */
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        /* Hidden Prompt Bar (for Anki automation) - Styles from old version */
+        #prompt-bar {
+            display: flex; align-items: center; padding: 1px 5px; /* Make it very small */
+            background-color: var(--prompt-bar-bg); flex-shrink: 0;
+            height: auto; overflow: hidden; /* Hide content visually */
+            transition: background-color 0.3s;
+         }
+        #prompt-input {
+            flex-grow: 1; padding: 0 2px; font-size: 1px; /* Tiny font */
+            border: 1px solid var(--prompt-bar-bg); border-radius: 3px 0 0 3px;
+            background-color: var(--prompt-bar-bg); color: var(--prompt-bar-bg); /* Hide text */
+            border-right: none; outline: none; box-shadow: none;
+            transition: background-color 0.3s, border-color 0.3s, color 0.3s; line-height: 1;
+        }
         #prompt-input::placeholder { color: var(--prompt-bar-bg); opacity: 1; }
         #prompt-input:focus { border-color: var(--prompt-bar-bg); box-shadow: none; }
-        #go-button { padding: 0 2px; font-size: 1px; height: auto; font-weight: 600; background-color: var(--button-go-bg); color: var(--button-go-text); border: 1px solid var(--prompt-bar-bg); border-left: none; border-radius: 0 3px 3px 0; cursor: pointer; white-space: nowrap; transition: background-color 0.3s, color 0.3s, border-color 0.3s; line-height: 1; }
-        #go-button:hover { opacity: 1; }
-        #prompt-input:disabled, #go-button:disabled { background-color: var(--prompt-bar-bg) !important; color: var(--prompt-bar-bg) !important; border-color: var(--prompt-bar-bg) !important; cursor: not-allowed; opacity: 0.8; }
+        #go-button {
+            padding: 0 2px; font-size: 1px; font-weight: 600; /* Tiny font */
+            background-color: var(--button-go-bg); color: var(--button-go-text); /* Hide text */
+            border: 1px solid var(--prompt-bar-bg); border-left: none;
+            border-radius: 0 3px 3px 0; cursor: pointer; white-space: nowrap;
+            transition: background-color 0.3s, color 0.3s, border-color 0.3s; line-height: 1;
+        }
+        #go-button:hover { opacity: 1; } /* Still allow hover effect if needed */
+        #prompt-input:disabled, #go-button:disabled {
+            background-color: var(--prompt-bar-bg) !important;
+            color: var(--prompt-bar-bg) !important;
+            border-color: var(--prompt-bar-bg) !important;
+            cursor: not-allowed; opacity: 0.8;
+         }
 
-        /* Main Response Area */
-        #response-output { flex-grow: 1; overflow-y: auto; padding: 25px; background-color: var(--body-bg); display: flex; flex-direction: column; transition: background-color 0.3s; background-image: url('logo.png'); background-repeat: no-repeat; background-position: center 70%; background-size: 250px auto; background-attachment: fixed; }
-
-        /* Bot Messages */
-        .message.bot-message { background-color: var(--response-bg); color: var(--text-color); padding: 15px 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); margin-bottom: 20px; max-width: 100%; line-height: 1.6; white-space: normal; /* Allows <br> to work */ transition: background-color 0.3s, color 0.3s, border-color 0.3s; position: relative; z-index: 1; border: 1px solid var(--button-send-bg); }
-        [data-theme="dark"] .message.bot-message { box-shadow: 0 2px 5px rgba(0,0,0,0.2); border-color: var(--button-send-bg); }
-
-        /* Styling for HTML elements INSIDE bot messages (colors set by AI inline style) */
-        .message.bot-message strong { font-weight: 600; }
-        .message.bot-message em { font-style: italic; }
-        .message.bot-message span[style*="color"] { font-weight: 500; /* Slightly bolder for color terms */ }
-        .message.bot-message span[style*="background-color"] { padding: 0.1em 0.3em; border-radius: 3px; /* Padding for background concepts */ }
-
-        /* Initial Message */
-        .message.initial-message { padding: 25px; text-align: center; border: 1px solid var(--button-send-bg); }
-        .start-gif { display: block; margin: 0 auto 25px auto; max-width: var(--start-gif-max-width); height: auto; }
-        .initial-message .intro-line { margin-bottom: 0; font-weight: 600; }
-
-        /* Thinking/Loading Indicator */
-        .thinking-message { text-align: center; font-style: italic; color: var(--placeholder-color); background-color: transparent; box-shadow: none; padding: 10px; margin-bottom: 20px; transition: color 0.3s; position: relative; z-index: 1; border: none; /* No border for thinking message */ }
-        .loading-gif { display: block; height: var(--loading-gif-height); width: auto; margin: 0 auto 10px auto; }
-
-        /* Error Message */
-        .error-message { background-color: #f8d7da; color: #842029; font-weight: bold; transition: none; border-color: #f5c6cb; }
-        [data-theme="dark"] .error-message { background-color: #842029; color: #f8d7da; border-color: #842029; }
-
-        /* Follow-up Buttons */
-        .follow-up-buttons { margin-top: 15px; padding-top: 10px; border-top: 1px dashed var(--border-color); display: flex; gap: 10px; flex-wrap: wrap; }
-        .follow-up-buttons button { padding: 6px 12px; font-size: 0.9em; border-radius: 15px; border: 1px solid var(--followup-button-border); background-color: var(--followup-button-bg); color: var(--followup-button-text); cursor: pointer; transition: background-color 0.2s, border-color 0.2s; }
-        .follow-up-buttons button:hover { opacity: 0.85; }
-
-        /* User Input Area */
-        #input-area { display: flex; padding: 15px; border-top: 1px solid var(--border-color); background-color: var(--body-bg); flex-shrink: 0; transition: background-color 0.3s, border-color 0.3s; }
-        #user-input { flex-grow: 1; padding: 10px 15px; border: 1px solid var(--border-color); border-radius: 20px; margin-right: 10px; background-color: var(--input-bg); color: var(--text-color); font-size: 1em; resize: none; outline: none; transition: background-color 0.3s, color 0.3s, border-color 0.3s; }
-        #user-input:focus { border-color: #86b7fe; box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25); }
-        [data-theme="dark"] #user-input:focus { border-color: #4dabf7; box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.35); }
-        #send-button { padding: 10px 20px; background-color: var(--button-send-bg); color: var(--button-send-text); border: none; border-radius: 20px; cursor: pointer; font-size: 1em; font-weight: 600; transition: background-color 0.3s, color 0.3s; }
-        #send-button:hover { opacity: 0.9; }
-        #send-button:disabled { background-color: #6c757d; cursor: not-allowed; transition: none; }
-        [data-theme="dark"] #send-button:disabled { background-color: #495057; }
-
-        /* Footer */
-        #footer-disclaimer { padding: 10px 20px; text-align: left; font-size: 0.75em; color: var(--footer-text); background-color: var(--body-bg); flex-shrink: 0; border-top: 1px solid var(--border-color); transition: background-color 0.3s, color 0.3s, border-color 0.3s; display: flex; justify-content: space-between; align-items: center; }
-        #footer-disclaimer .footer-text { flex-grow: 1; margin-right: 15px; }
-        #footer-disclaimer .darkmode-toggle-container { display: flex; align-items: center; transform: scale(0.8); transform-origin: right center; }
+        /* Title Bar (from old version) */
+        #title-bar {
+            background-color: var(--header-bar-bg); color: var(--header-text);
+            padding: 10px 20px; display: flex; justify-content: space-between;
+            align-items: center; flex-shrink: 0; /* Prevent shrinking */
+            transition: background-color 0.3s, color 0.3s;
+        }
+        .header-left { display: flex; align-items: center; }
+        #logo { height: 40px; margin-right: 15px; vertical-align: middle; }
+        #title-area { display: flex; flex-direction: column; line-height: 1.2; }
+        .main-title { font-size: 1.2em; font-weight: 700; }
+        .sub-title { font-size: 0.8em; font-weight: 400; opacity: 0.9; }
+        .header-right { display: flex; align-items: center; }
+        .darkmode-label { margin-right: 5px; font-size: 0.8em; }
         .switch { position: relative; display: inline-block; width: 44px; height: 24px; vertical-align: middle; }
         .switch input { display:none; }
         .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 24px; }
@@ -122,75 +126,213 @@
         [data-theme="dark"] input:checked + .slider { background-color: #2196F3; }
         input:checked + .slider:before { transform: translateX(20px); }
 
+        /* Main Response Area (from old version) */
+        #response-output {
+            flex-grow: 1; /* Takes remaining space */
+            overflow-y: auto; /* Scrollbar if needed */
+            padding: 25px;
+            background-color: var(--body-bg);
+            display: flex;
+            flex-direction: column;
+            transition: background-color 0.3s;
+             /* Remove background logo if it was conflicting */
+             /* background-image: url('logo.png'); ... */
+        }
+
+        /* Bot Messages (General styling from old, but using 'normal' whitespace for HTML) */
+        .message.bot-message {
+            background-color: var(--response-bg); color: var(--text-color);
+            padding: 15px 20px; border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05); margin-bottom: 20px;
+            max-width: 100%; line-height: 1.6;
+            white-space: normal; /* IMPORTANT: Use 'normal' to allow <br> from HTML */
+            transition: background-color 0.3s, color 0.3s;
+            /* Optional: Add border like in new UI if desired */
+            /* border: 1px solid var(--button-send-bg); */
+        }
+        [data-theme="dark"] .message.bot-message {
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            /* border-color: var(--button-send-bg); */
+        }
+        /* Styling for HTML elements INSIDE bot messages (as required by JS/Backend) */
+        .message.bot-message strong { font-weight: 600; }
+        .message.bot-message em { font-style: italic; }
+        .message.bot-message span[style*="color"] { font-weight: 500; }
+        .message.bot-message span[style*="background-color"] { padding: 0.1em 0.3em; border-radius: 3px; }
+
+        /* Initial Message Styling (from old version) */
+        .message.initial-message {
+            padding: 25px; text-align: left;
+        }
+        .start-gif {
+             display: block; margin: 0 auto 25px auto;
+             max-width: var(--start-gif-max-width); height: auto;
+        }
+        .initial-message .intro-line {
+             text-align: center; margin-bottom: 25px; font-weight: 600;
+         }
+        .initial-message .instructions-heading {
+             font-weight: 700; font-size: 1.1em; margin-bottom: 15px;
+         }
+         .initial-message p { margin-bottom: 10px; line-height: 1.5; }
+         .initial-message p strong { display: inline-block; margin-right: 5px; }
+
+        /* Thinking/Loading Styling (from old version) */
+        .thinking-message {
+            text-align: center; font-style: italic; color: var(--placeholder-color);
+            background-color: transparent; box-shadow: none;
+            padding: 10px; margin-bottom: 20px; transition: color 0.3s;
+            border: none; /* Ensure no border */
+        }
+        .loading-gif {
+            display: block; height: var(--loading-gif-height); width: auto;
+            margin: 0 auto 10px auto;
+        }
+
+        /* Error Message Styling (from old version) */
+        .error-message {
+            background-color: #f8d7da; color: #842029;
+            font-weight: bold; transition: none;
+            /* Ensures it uses bot-message padding/border-radius */
+        }
+        [data-theme="dark"] .error-message { background-color: #842029; color: #f8d7da; }
+
+        /* Follow-up Buttons Styling (from old version) */
+        .follow-up-buttons {
+             margin-top: 15px; padding-top: 10px;
+             border-top: 1px dashed var(--border-color);
+             display: flex; gap: 10px; flex-wrap: wrap;
+        }
+        .follow-up-buttons button {
+            padding: 6px 12px; font-size: 0.9em; border-radius: 15px;
+            border: 1px solid var(--followup-button-border);
+            background-color: var(--followup-button-bg);
+            color: var(--followup-button-text); cursor: pointer;
+            transition: background-color 0.2s, border-color 0.2s;
+        }
+        .follow-up-buttons button:hover { opacity: 0.85; }
+
+        /* User Input Area (from old version) */
+        #input-area {
+            display: flex; padding: 15px; border-top: 1px solid var(--border-color);
+            background-color: var(--body-bg); flex-shrink: 0; /* Prevent shrinking */
+            transition: background-color 0.3s, border-color 0.3s;
+        }
+        #user-input {
+            flex-grow: 1; padding: 10px 15px; border: 1px solid var(--border-color);
+            border-radius: 20px; margin-right: 10px; background-color: var(--input-bg);
+            color: var(--text-color); font-size: 1em; resize: none; outline: none;
+            transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+        }
+        #user-input:focus {
+             border-color: #86b7fe; box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+         }
+         [data-theme="dark"] #user-input:focus {
+              border-color: #4dabf7; box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.35);
+         }
+        #send-button {
+            padding: 10px 20px; background-color: var(--button-send-bg);
+            color: var(--button-send-text); border: none; border-radius: 20px;
+            cursor: pointer; font-size: 1em; font-weight: 600;
+            transition: background-color 0.3s, color 0.3s;
+        }
+        #send-button:hover { opacity: 0.9; }
+        #send-button:disabled { background-color: #6c757d; cursor: not-allowed; transition: none; }
+        [data-theme="dark"] #send-button:disabled { background-color: #495057; }
+
+        /* Footer Disclaimer (from old version) */
+        #footer-disclaimer {
+            padding: 10px 20px; text-align: center; font-size: 0.75em;
+            color: var(--footer-text); background-color: var(--body-bg);
+            flex-shrink: 0; /* Prevent shrinking */
+            border-top: 1px solid var(--border-color);
+            transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+        }
+
     </style>
 </head>
 <body>
-    <!-- HTML Structure -->
+    <!-- HTML Structure from OLD WORKING version -->
     <div id="prompt-bar">
         <input type="text" id="prompt-input" placeholder="Automation..." autocomplete="off">
         <button id="go-button">Go</button>
     </div>
-
+    <header id="title-bar">
+        <div class="header-left">
+            <img src="logo.png" alt="Logo" id="logo"> <!-- Ensure logo.png exists -->
+            <div id="title-area">
+                <span class="main-title">Synapse Pro</span>
+                <span class="sub-title">Anki Card AI Assistant</span>
+            </div>
+        </div>
+        <div class="header-right">
+            <span class="darkmode-label">Darkmode</span>
+            <label class="switch">
+                <input type="checkbox" id="darkmode-toggle"> <!-- Toggle in header -->
+                <span class="slider round"></span>
+            </label>
+        </div>
+    </header>
     <main id="response-output">
-        <!-- Initial Message -->
+        <!-- Initial Message from OLD WORKING version -->
         <div class="message bot-message initial-message">
-            <img src="start.gif" alt="Start Guide" class="start-gif">
+            <img src="start.gif" alt="Start Guide" class="start-gif"> <!-- Ensure start.gif exists -->
             <p class="intro-line"> Use the buttons above to start, don't forget to select your preferred language. </p>
+            <div class="instructions-content">
+                <p class="instructions-heading">How to use</p>
+                <p><strong>Short:</strong> Explains your current Anki card briefly using different words.</p>
+                <p><strong>Detailed:</strong> Explains your current Anki card in detail.</p>
+                <p><strong>MCQ:</strong> Generates a Multiple Choice Question for your current Anki card.</p>
+                <p><strong>Mnemonic:</strong> Generates a mnemonic or memory aid for your current Anki card.</p>
+                <p><strong>Joke:</strong> Generates a joke related to your current Anki card.</p>
+                <p><strong>Own Prompt:</strong> Write your own automation prompt.</p>
+                <br>
+                <p><strong>Language:</strong> Select your preferred language from the list; the answer will be given in this language.</p>
+            </div>
         </div>
         <!-- Chat messages will be appended here -->
     </main>
-
     <div id="input-area">
         <input type="text" id="user-input" placeholder="Ask something..." autocomplete="off">
         <button id="send-button">Send</button>
     </div>
-
     <footer id="footer-disclaimer">
-        <span class="footer-text">The Synapse Pro AI can make mistakes. Please check important Information.</span>
-        <div class="darkmode-toggle-container">
-             <label class="switch">
-                <input type="checkbox" id="darkmode-toggle">
-                <span class="slider round"></span>
-             </label>
-        </div>
+         The Synapse Pro AI can make mistakes. Please check important Information.
     </footer>
 
     <script>
-        // --- DOM Element References ---
+        // --- JAVASCRIPT LOGIC (Adapted from previous reliable version, expecting HTML from backend) ---
+
+        // --- DOM Element References (Matches OLD HTML Structure) ---
         const responseOutput = document.getElementById('response-output');
-        const promptInput = document.getElementById('prompt-input');
-        const goButton = document.getElementById('go-button');
-        const userInput = document.getElementById('user-input');
-        const sendButton = document.getElementById('send-button');
-        const darkModeToggle = document.getElementById('darkmode-toggle');
+        const promptInput = document.getElementById('prompt-input'); // For automation
+        const goButton = document.getElementById('go-button');       // For automation trigger
+        const userInput = document.getElementById('user-input');     // For user typing
+        const sendButton = document.getElementById('send-button');   // For user click
+        const darkModeToggle = document.getElementById('darkmode-toggle'); // In header now
 
         // --- CONFIGURATION ---
-        const BACKEND_API_URL = '/api/chat'; // Relative path to the Vercel serverless function (Backend)
-        const MAX_HISTORY_LENGTH = 10; // Max number of turns (1 turn = 1 user + 1 assistant message)
+        const BACKEND_API_URL = '/api/chat'; // Relative path to Vercel Serverless Function (Backend)
+        const MAX_HISTORY_LENGTH = 10; // Max number of conversation turns (1 turn = 1 user + 1 assistant)
 
         // --- Global State ---
-        let chatHistory = []; // Stores conversation history as { role: 'user'/'assistant', content: '...' }
+        let chatHistory = []; // Stores conversation { role: 'user'/'assistant', content: '...' }
         // System Prompt is defined securely in the backend (api/chat.js)
 
         // --- Event Listeners ---
-        // Listener for the hidden "Go" button (triggered by Anki Addon via handleSend)
+        // Automation Trigger (direct call via window.handleSend is preferred by Anki addon)
         goButton.addEventListener('click', () => handleSend(promptInput));
-        // Allow Enter key in hidden prompt input (might be useful for testing)
         promptInput.addEventListener('keypress', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(promptInput); } });
 
-        // Listener for the visible "Send" button (for user interaction)
+        // User Interaction Triggers
         sendButton.addEventListener('click', () => handleSend(userInput));
-        // Allow Enter key in user input field
         userInput.addEventListener('keypress', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(userInput); } });
 
-        // Listener for the dark mode toggle
+        // Theme Toggle
         darkModeToggle.addEventListener('change', toggleTheme);
 
         // --- Core Functions ---
 
-        /**
-         * Toggles the theme between light and dark and saves the preference.
-         */
         function toggleTheme() {
              if (darkModeToggle.checked) {
                  document.documentElement.setAttribute('data-theme', 'dark');
@@ -201,108 +343,81 @@
              }
         }
 
-        /**
-         * Applies the saved theme preference on page load.
-         */
         function applySavedTheme() {
             const savedTheme = localStorage.getItem('theme');
             if (savedTheme === 'dark') {
                 darkModeToggle.checked = true;
                 document.documentElement.setAttribute('data-theme', 'dark');
             } else {
-                 // Default to light theme if nothing saved or saved as light
                 darkModeToggle.checked = false;
                 document.documentElement.removeAttribute('data-theme');
             }
         }
 
         /**
-         * Creates a message div element for the chat interface.
-         * IMPORTANT: Uses `innerHTML` for bot messages to render HTML sent from the backend.
-         * Assumes the backend sanitizes or generates safe HTML based on the system prompt.
-         *
-         * @param {string} text - The message content (plain text for errors, HTML for bot replies).
-         * @param {string} [type='bot'] - The type of message ('bot').
-         * @param {boolean} [isThinking=false] - If true, displays a loading indicator.
-         * @param {boolean} [isError=false] - If true, applies error styling.
-         * @returns {HTMLDivElement} The created message element.
+         * Creates message elements. Uses innerHTML for bot replies to render HTML from backend.
+         * Adapts thinking message text slightly.
          */
         function createMessageElement(text, type = 'bot', isThinking = false, isError = false) {
              const messageDiv = document.createElement('div');
-             messageDiv.classList.add('message'); // Base class
+             messageDiv.classList.add('message');
 
              if (isThinking) {
-                 messageDiv.classList.add('thinking-message'); // Special styling, no border
+                 messageDiv.classList.add('thinking-message'); // No border, specific style
                  const img = document.createElement('img');
                  img.src = 'loading.gif'; // Ensure loading.gif is accessible
                  img.alt = 'Loading...';
                  img.classList.add('loading-gif');
                  messageDiv.appendChild(img);
-                 const textNode = document.createTextNode('Analyzing...'); // Thinking text
+                 // Use thinking text from old version
+                 const textNode = document.createTextNode('Analyzing your Anki Card...');
                  messageDiv.appendChild(textNode);
-                 messageDiv.dataset.thinkingId = `thinking-${Date.now()}`; // Unique ID to find/replace later
+                 messageDiv.dataset.thinkingId = `thinking-${Date.now()}`;
              } else if (isError) {
-                 messageDiv.classList.add('bot-message', 'error-message'); // Use bot message structure but with error style
-                 messageDiv.textContent = text; // Display errors as plain text for safety
+                 // Apply 'bot-message' for structure (padding, radius) + 'error-message' for colors
+                 messageDiv.classList.add('bot-message', 'error-message');
+                 messageDiv.textContent = text; // Display error as plain text
              } else if (type === 'bot') {
-                 messageDiv.classList.add('bot-message'); // Standard bot message style
-                 // *** CRITICAL: Render HTML content from backend ***
-                 // Ensure your backend /api/chat.js is configured with a system prompt
-                 // that strictly enforces the generation of safe, expected HTML tags.
+                 messageDiv.classList.add('bot-message');
+                 // *** RENDER HTML FROM BACKEND ***
+                 // Requires backend to send HTML with <br>, <strong>, <span> etc.
                  messageDiv.innerHTML = text;
              }
-             // User messages aren't displayed directly in this version, only sent.
             return messageDiv;
         }
 
-        /**
-         * Scrolls the chat output container to the bottom smoothly.
-         */
         function scrollToBottom() {
-            // Use a small timeout to allow the DOM to update before scrolling
             setTimeout(() => {
-                responseOutput.scrollTo({
-                    top: responseOutput.scrollHeight,
-                    behavior: 'smooth' // Use smooth scrolling
-                });
-            }, 50); // 50ms delay seems reasonable
+                responseOutput.scrollTo({ top: responseOutput.scrollHeight, behavior: 'smooth' });
+            }, 50);
         }
 
         /**
-         * Generates follow-up suggestion buttons below a bot message.
-         * @param {HTMLDivElement} messageElement - The bot message element to append buttons to.
+         * Generates follow-up buttons (using suggestions from old version).
          */
         function generateFollowUpButtons(messageElement) {
             const buttonArea = document.createElement('div');
             buttonArea.classList.add('follow-up-buttons');
-            // Example follow-up suggestions
-            const suggestions = ["Explain further", "Give an example", "Make it simpler"];
-
+            // Suggestions from the old working version
+            const suggestions = ["Explain further", "Give an example"]; // Add more if needed
             suggestions.forEach(suggestion => {
                 const button = document.createElement('button');
                 button.textContent = suggestion;
                 button.onclick = () => {
-                    // Remove all follow-up buttons before sending new message
                     const oldButtonAreas = responseOutput.querySelectorAll('.follow-up-buttons');
                     oldButtonAreas.forEach(area => area.remove());
-                    // Set suggestion as user input and trigger send
                     userInput.value = suggestion;
-                    handleSend(userInput); // Treat follow-up click like user input
+                    handleSend(userInput); // Trigger send with suggestion
                 };
                 buttonArea.appendChild(button);
             });
-
             messageElement.appendChild(buttonArea);
-            scrollToBottom(); // Ensure buttons are visible after adding
+            scrollToBottom();
         }
 
         /**
-         * Handles sending a message to the backend API.
-         * This function is called by event listeners AND can be called directly
-         * by external scripts (like the Anki addon) via `window.handleSend(element)`.
-         *
-         * @param {HTMLInputElement} inputElement - The input element that triggered the send
-         *                                         (#prompt-input or #user-input).
+         * Handles sending messages to the backend. Accessible via window.handleSend.
+         * Differentiates between user and automation input for UI updates.
          */
         async function handleSend(inputElement) {
             if (!inputElement) {
@@ -312,170 +427,131 @@
 
             const inputText = inputElement.value.trim();
 
-            // Prevent sending empty messages *only* from the main user input field
+            // Allow automation input to be empty, but not user input.
             if (!inputText && inputElement.id === 'user-input') {
                 return;
             }
-            // Allow automation (prompt-bar) to send potentially empty strings if needed
 
-            // --- UI Preparation ---
-            // Remove any previous follow-up buttons
+            // --- UI Prep ---
             const oldButtonAreas = responseOutput.querySelectorAll('.follow-up-buttons');
             oldButtonAreas.forEach(area => area.remove());
 
-            // Disable all input controls during processing
             promptInput.disabled = true;
             goButton.disabled = true;
             userInput.disabled = true;
             sendButton.disabled = true;
 
-            // Clear the *user's* input field after capturing value. Don't clear automation input.
-            if (inputElement.id === 'user-input') {
-                 inputElement.value = '';
-            }
-
-            // Determine if this action should update the UI (user-initiated)
             const isUserInteraction = (inputElement.id === 'user-input');
             let thinkingMsgElement = null;
 
+             // Clear input ONLY if it was the user's input field
             if (isUserInteraction) {
-                // Hide the initial message and background logo on the first user message
+                 inputElement.value = '';
+            }
+
+
+            if (isUserInteraction) {
                 const initialMessage = responseOutput.querySelector('.initial-message');
                 if (initialMessage && initialMessage.style.display !== 'none') {
-                    initialMessage.style.display = 'none';
-                    responseOutput.style.backgroundImage = 'none'; // Hide logo background
+                    initialMessage.style.display = 'none'; // Hide initial instructions
                 }
-                // Display thinking indicator in the chat window
                 thinkingMsgElement = createMessageElement('', 'bot', true);
                 responseOutput.appendChild(thinkingMsgElement);
                 scrollToBottom();
             } else {
-                console.log("Automation prompt received:", inputText); // Log automation input
+                 console.log("Automation prompt received:", inputText); // Log automation
             }
 
             // --- API Call ---
             try {
-                console.log(`Sending to backend: ${inputText.substring(0, 50)}...`);
                 const response = await fetch(BACKEND_API_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         userMessage: inputText,
-                        chatHistory: chatHistory // Send conversation context
+                        chatHistory: chatHistory
                     })
                 });
 
-                // Find the thinking message (if it was created) to replace it later
                 const currentThinkingElement = thinkingMsgElement
                     ? responseOutput.querySelector(`[data-thinking-id="${thinkingMsgElement.dataset.thinkingId}"]`)
                     : null;
 
-                // --- Handle API Response ---
+                // --- Handle Response ---
                 if (!response.ok) {
-                    // Attempt to parse error message from backend JSON response
-                    let errorData = { error: `API Error: ${response.statusText} (Status: ${response.status})` }; // Default
+                    let errorData = { error: `API Error: ${response.statusText} (Status: ${response.status})` };
                     try {
                         const jsonError = await response.json();
-                        if (jsonError && jsonError.error) {
-                           errorData.error = `Error ${response.status}: ${jsonError.error}`;
-                        }
-                    } catch (e) { /* Ignore parsing error, use default */ }
-
+                        if (jsonError && jsonError.error) { errorData.error = `Error ${response.status}: ${jsonError.error}`; }
+                    } catch (e) { /* Use default */ }
                     console.error('Backend/API Error:', response.status, errorData.error);
 
-                    // Display error in UI only if user-initiated
                     if (currentThinkingElement) {
                          const errorElement = createMessageElement(errorData.error, 'bot', false, true);
                          currentThinkingElement.replaceWith(errorElement);
-                    } else {
-                         console.error("Error occurred during automation request:", errorData.error); // Log automation errors
-                    }
-                    return; // Stop processing on error
+                    } else { console.error("Error during automation:", errorData.error); }
+                    return;
                 }
 
-                // Process successful response
                 const data = await response.json();
 
                 if (data.choices && data.choices.length > 0 && data.choices[0].message) {
-                    const botReplyHtml = data.choices[0].message.content; // Expecting HTML string from backend
+                    const botReplyHtml = data.choices[0].message.content; // Expecting HTML
 
-                    // Add the current turn to chat history
                     chatHistory.push({ role: "user", content: inputText });
-                    chatHistory.push({ role: "assistant", content: botReplyHtml }); // Store HTML response
+                    chatHistory.push({ role: "assistant", content: botReplyHtml });
 
-                    // Limit history length (remove oldest turn if limit exceeded)
-                    // MAX_HISTORY_LENGTH refers to turns (user+assistant pairs)
                     if (chatHistory.length > MAX_HISTORY_LENGTH * 2) {
-                        chatHistory = chatHistory.slice(2); // Remove the first two items (oldest user/assistant pair)
+                        chatHistory = chatHistory.slice(2); // Trim history
                     }
 
-                    // Update UI only if user-initiated
                     if (currentThinkingElement) {
-                         const replyElement = createMessageElement(botReplyHtml, 'bot'); // Render HTML reply
+                         const replyElement = createMessageElement(botReplyHtml, 'bot'); // Render HTML
                          currentThinkingElement.replaceWith(replyElement);
-                         generateFollowUpButtons(replyElement); // Add follow-up buttons if needed
+                         generateFollowUpButtons(replyElement);
                     } else {
-                        // Log the successful reply from automation (don't display in UI)
-                        console.log("Automation reply received (HTML):", botReplyHtml.substring(0, 100) + "...");
+                         console.log("Automation reply OK:", botReplyHtml.substring(0,100) + "..."); // Log automation OK
                     }
 
                 } else if (data.error) {
-                     // Handle controlled errors reported by the backend itself
-                     console.error('Backend returned controlled error:', data.error);
+                     console.error('Backend controlled error:', data.error);
                      const errorMessage = `Backend Error: ${data.error}`;
                      if (currentThinkingElement) {
                          const errorElement = createMessageElement(errorMessage, 'bot', false, true);
                          currentThinkingElement.replaceWith(errorElement);
-                     } else {
-                         console.error("Controlled backend error during automation:", errorMessage);
-                     }
-                     return; // Stop processing
-                } else {
-                    // Handle unexpected successful response format
-                    throw new Error('Unexpected success response structure from backend.');
-                }
+                     } else { console.error("Controlled backend error during automation:", errorMessage); }
+                     return;
+                } else { throw new Error('Unexpected success response structure.'); }
 
             } catch (error) {
-                // Handle network errors or other JS exceptions during fetch/processing
-                console.error('Error during communication or processing:', error);
-                const currentThinkingElement = thinkingMsgElement
-                    ? responseOutput.querySelector(`[data-thinking-id="${thinkingMsgElement.dataset.thinkingId}"]`)
-                    : null;
+                console.error('Communication/Processing Error:', error);
+                const currentThinkingElement = thinkingMsgElement ? responseOutput.querySelector(`[data-thinking-id="${thinkingMsgElement.dataset.thinkingId}"]`) : null;
                 const displayError = `Communication Error: ${error.message}`;
-
-                // Display error in UI only if user-initiated
                 if (currentThinkingElement) {
                     const errorElement = createMessageElement(displayError, 'bot', false, true);
                     currentThinkingElement.replaceWith(errorElement);
-                } else {
-                     console.error("Communication error during automation:", displayError);
-                }
+                } else { console.error("Communication error during automation:", displayError); }
 
             } finally {
                 // --- UI Cleanup ---
-                // Re-enable all input controls regardless of success/failure
                 promptInput.disabled = false;
                 goButton.disabled = false;
                 userInput.disabled = false;
                 sendButton.disabled = false;
 
-                // Focus user input and scroll down only if it was a user interaction
                 if (isUserInteraction) {
-                     userInput.focus();
-                     scrollToBottom();
+                     userInput.focus(); // Refocus user input
+                     scrollToBottom(); // Scroll down after response/error
                 }
             }
         }
 
         // --- Initialization ---
-        // Define handleSend globally so it's accessible via window.handleSend
+        // Expose handleSend globally for Anki Addon
         window.handleSend = handleSend;
 
-        // Apply saved theme (light/dark) on load
-        applySavedTheme();
-
-        // Set initial focus on the user input field
-        userInput.focus();
+        applySavedTheme(); // Apply light/dark theme
+        userInput.focus(); // Focus user input on load
 
     </script>
 </body>
