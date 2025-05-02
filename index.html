@@ -27,7 +27,10 @@
             --followup-button-text: #495057;
             --followup-button-border: #ced4da;
             --bot-message-border-color: #0071D3;
-            --hidden-color: #F6F6F6; /* ADDED Variable for the hidden color */
+            --hidden-color: #F6F6F6;
+            /* ADDED Highlight Variables */
+            --highlight-color-term: #005EB8; /* Default blue for terms */
+            --highlight-bg-concept: #FFFACD; /* Default light yellow for concepts */
         }
 
         /* --- DARK MODE Variables --- */
@@ -45,8 +48,18 @@
             --followup-button-text: #f8f9fa;
             --followup-button-border: #6c757d;
             --bot-message-border-color: #0071D3;
-            /* --hidden-color remains #F6F6F6 as requested, even in dark mode */
+            /* ADDED Highlight Variables for Dark Mode */
+            --highlight-color-term: #66bfff; /* Lighter blue for dark mode terms */
+            --highlight-bg-concept: #FFFACD; /* Keeping light yellow, ensure text on it is readable */
+            /* Optional: Add color rule if text on yellow bg is hard to read */
+            /* --text-on-highlight: #333; */
         }
+
+        /* Optional: Ensure text on yellow concept highlight is readable in dark mode */
+        /* [data-theme="dark"] span[style*='--highlight-bg-concept'] {
+             color: var(--text-on-highlight, #333); /* Fallback to dark grey */
+        /* } */
+
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -120,8 +133,7 @@
         #response-output {
             flex-grow: 1;
             overflow-y: auto;
-            /* padding: 25px; */ /* Original padding */
-            padding: 5px 25px 25px 25px; /* MODIFIED: Reduced top padding significantly */
+            padding: 5px 25px 25px 25px; /* Reduced top padding */
             background-color: var(--body-bg);
             display: flex;
             flex-direction: column;
@@ -133,12 +145,17 @@
             background-color: var(--response-bg); color: var(--text-color);
             padding: 15px 20px; border-radius: 8px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.05); margin-bottom: 20px;
-            max-width: 100%; line-height: 1.6; white-space: pre-wrap;
+            max-width: 100%; line-height: 1.6; white-space: pre-wrap; /* Keep pre-wrap for potential AI errors */
             border: 1px solid var(--bot-message-border-color);
             transition: background-color 0.3s, color 0.3s, border-color 0.3s;
         }
+        /* Let HTML content inside dictate word breaks etc. */
+        .message.bot-message > *:first-child { margin-top: 0; } /* Prevent extra margin on first element */
+        .message.bot-message > *:last-child { margin-bottom: 0; } /* Prevent extra margin on last element */
+
+
         [data-theme="dark"] .message.bot-message { box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
-        .message strong, .message b { font-weight: 600; }
+        /* strong/em tags will be handled by default browser styles or AI-provided HTML */
 
         /* Spezifisches Styling für die initiale Nachricht */
         .message.initial-message {
@@ -286,8 +303,6 @@
     </footer>
 
     <script>
-        // JAVASCRIPT LOGIC REMAINS UNCHANGED FROM PREVIOUS VERSION
-
         // --- DOM Element References ---
         const responseOutput = document.getElementById('response-output');
         const promptInput = document.getElementById('prompt-input');
@@ -297,12 +312,11 @@
         const darkModeToggle = document.getElementById('darkmode-toggle');
 
         // --- CONFIGURATION ---
-        const BACKEND_API_URL = '/api/chat'; // Pfad zur Serverless Function
-        const MAX_HISTORY_LENGTH = 10; // Max messages in history
+        const BACKEND_API_URL = '/api/chat';
+        const MAX_HISTORY_LENGTH = 10;
 
         // --- Global State ---
         let chatHistory = [];
-        // System Prompt ist im Backend definiert!
 
         // --- Event Listeners ---
         goButton.addEventListener('click', () => handleSend(promptInput));
@@ -322,29 +336,33 @@
             else { darkModeToggle.checked = false; document.documentElement.removeAttribute('data-theme'); }
         }
 
+        // UPDATED createMessageElement to handle direct HTML from AI
         function createMessageElement(text, type = 'bot', isThinking = false, isError = false) {
              const messageDiv = document.createElement('div');
-             messageDiv.classList.add('message'); // Basisklasse
+             messageDiv.classList.add('message'); // Base class
+
              if (isThinking) {
-                 messageDiv.classList.add('thinking-message'); // Keine bot-message hier
+                 messageDiv.classList.add('thinking-message');
                  const img = document.createElement('img'); img.src = 'loading.gif'; img.alt = 'Loading...'; img.classList.add('loading-gif'); messageDiv.appendChild(img);
                  const textNode = document.createTextNode('Analyzing your Anki Card...'); messageDiv.appendChild(textNode);
                  messageDiv.dataset.thinkingId = `thinking-${Date.now()}`;
              } else if (isError) {
-                 messageDiv.classList.add('bot-message', 'error-message'); // Fehler bekommen Bot-Styling
-                 messageDiv.textContent = text;
+                 messageDiv.classList.add('bot-message', 'error-message');
+                 messageDiv.textContent = text; // Error messages are plain text
              } else if (type === 'bot') {
-                 // Handle initial message differently - no text formatting needed here now
-                 if (messageDiv.classList.contains('initial-message')) {
-                     // Already handled by HTML structure
-                 } else {
-                    messageDiv.classList.add('bot-message'); // Normale Bot-Nachricht
-                    // Apply formatting only to actual bot replies
-                    let formattedText = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-                    formattedText = formattedText.replace(/\n/g, '<br>');
-                    messageDiv.innerHTML = formattedText;
-                 }
+                 messageDiv.classList.add('bot-message');
+                 // --- CRITICAL CHANGE HERE ---
+                 // Directly set innerHTML because the AI is expected to return valid HTML
+                 messageDiv.innerHTML = text;
+                 // Remove previous Markdown-to-HTML conversion:
+                 // let formattedText = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+                 // formattedText = formattedText.replace(/\n/g, '<br>');
+                 // messageDiv.innerHTML = formattedText;
              }
+            // Handle initial message specific setup if needed (already static in HTML)
+            if (messageDiv.classList.contains('initial-message')) {
+                 // No specific JS needed here as content is static
+            }
             return messageDiv;
         }
 
@@ -394,7 +412,8 @@
                 }
                 const data = await response.json();
                 if (data.choices && data.choices.length > 0 && data.choices[0].message) {
-                    const botReply = data.choices[0].message.content; const replyElement = createMessageElement(botReply, 'bot');
+                    const botReply = data.choices[0].message.content; // This content should now be HTML
+                    const replyElement = createMessageElement(botReply, 'bot'); // Pass 'bot' type
                     chatHistory.push({ role: "user", content: inputText }); chatHistory.push({ role: "assistant", content: botReply });
                     if (chatHistory.length > MAX_HISTORY_LENGTH) { chatHistory = chatHistory.slice(-MAX_HISTORY_LENGTH); }
                     if (currentThinkingElement) { currentThinkingElement.replaceWith(replyElement); generateFollowUpButtons(replyElement); }
