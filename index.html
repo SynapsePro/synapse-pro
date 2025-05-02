@@ -3,27 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Synapse Pro - Mixtral Chat</title>
+    <title>Synapse Pro - Chat Assistant</title>
     <!-- Import Inter Font -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 
     <style>
-        /* VOLLSTÄNDIGES CSS WIEDERHERGESTELLT VON FUNKTIONIERENDER UI-VERSION */
+        /* CSS von test.html (inkl. Variablen, Dark Mode, HTML Highlighting, Logo BG etc.) */
         :root {
-            --header-bar-bg: #0071D3;
-            --header-text: #ffffff;
-            --body-bg: #f7f7f8;
-            --prompt-bar-bg: var(--header-bar-bg); /* Blau für obere Leiste */
+            --body-bg: #F6F6F6;
+            --prompt-bar-bg: var(--body-bg);
             --response-bg: #ffffff;
             --text-color: #212529;
             --border-color: #dee2e6;
             --input-bg: #ffffff;
             --placeholder-color: #6c757d;
-            --button-go-bg: #f8f9fa; /* Wird überschrieben */
-            --button-go-text: #343a40;/* Wird überschrieben */
-            --button-send-bg: #0071D3;
+            --button-send-bg: #0071D3; /* Wird auch für Rand verwendet */
             --button-send-text: #ffffff;
             --footer-text: #6c757d;
             --loading-gif-height: 60px;
@@ -31,13 +27,16 @@
             --followup-button-bg: #e9ecef;
             --followup-button-text: #495057;
             --followup-button-border: #ced4da;
+            --button-go-bg: var(--prompt-bar-bg);
+            --button-go-text: var(--prompt-bar-bg);
+             /* Farben für HTML Highlighting (Beispiele, können von AI überschrieben werden) */
+            --highlight-color-term: #005EB8; /* Dunkles Blau */
+            --highlight-bg-concept: #FFFACD; /* Helles Gelb (LemonChiffon) */
         }
 
-        /* --- DARK MODE Variables --- */
         [data-theme="dark"] {
-            --header-bar-bg: #005eb8;
-            --header-text: #e0e0e0;
             --body-bg: #212529;
+            --prompt-bar-bg: var(--body-bg);
             --response-bg: #343a40;
             --text-color: #f8f9fa;
             --border-color: #495057;
@@ -49,68 +48,66 @@
             --followup-button-bg: #495057;
             --followup-button-text: #f8f9fa;
             --followup-button-border: #6c757d;
+            --button-go-bg: var(--prompt-bar-bg);
+            --button-go-text: var(--prompt-bar-bg);
+             /* Farben für HTML Highlighting (Dark Mode) */
+             --highlight-color-term: #4dabf7; /* Helleres Blau */
+             --highlight-bg-concept: #696440; /* Dunkleres Gelb */
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: var(--body-bg); color: var(--text-color); display: flex; flex-direction: column; height: 100vh; overflow: hidden; transition: background-color 0.3s, color 0.3s; }
 
-        body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--body-bg);
-            color: var(--text-color);
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
-            overflow: hidden; /* Verhindert Scrollen des Body */
-            transition: background-color 0.3s, color 0.3s;
-        }
-
-        /* Obere Prompt-Leiste (Visuell versteckt) */
-        #prompt-bar {
-            display: flex;
-            align-items: center;
-            padding: 5px 10px;
-            background-color: var(--prompt-bar-bg);
-            flex-shrink: 0; /* Wichtig */
-            transition: background-color 0.3s;
-        }
-        #prompt-input {
-            flex-grow: 1; padding: 4px 8px; font-size: 0.8em;
-            border: 1px solid var(--prompt-bar-bg); border-radius: 3px 0 0 3px;
-            background-color: var(--prompt-bar-bg); color: var(--prompt-bar-bg);
-            border-right: none; outline: none; box-shadow: none;
-            transition: background-color 0.3s, border-color 0.3s, color 0.3s;
-        }
+        /* Prompt Bar (visuell minimiert, aber im DOM) */
+        /* ACHTUNG: Extreme Verkleinerung *könnte* JS-Interaktion aus Anki erschweren. */
+        /* Alternative: position: absolute; left: -9999px; */
+        #prompt-bar { display: flex; align-items: center; padding: 1px 5px; background-color: var(--prompt-bar-bg); flex-shrink: 0; height: auto; overflow: hidden; transition: background-color 0.3s; }
+        #prompt-input { flex-grow: 1; padding: 0 2px; font-size: 1px; height: auto; border: 1px solid var(--prompt-bar-bg); border-radius: 3px 0 0 3px; background-color: var(--prompt-bar-bg); color: var(--prompt-bar-bg); border-right: none; outline: none; box-shadow: none; transition: background-color 0.3s, border-color 0.3s, color 0.3s; line-height: 1; }
         #prompt-input::placeholder { color: var(--prompt-bar-bg); opacity: 1; }
         #prompt-input:focus { border-color: var(--prompt-bar-bg); box-shadow: none; }
-        #go-button {
-            padding: 4px 10px; font-size: 0.8em; font-weight: 600;
-            background-color: var(--prompt-bar-bg); color: var(--prompt-bar-bg);
-            border: 1px solid var(--prompt-bar-bg); border-left: none;
-            border-radius: 0 3px 3px 0; cursor: pointer; white-space: nowrap;
-            transition: background-color 0.3s, color 0.3s, border-color 0.3s;
-        }
+        #go-button { padding: 0 2px; font-size: 1px; height: auto; font-weight: 600; background-color: var(--button-go-bg); color: var(--button-go-text); border: 1px solid var(--prompt-bar-bg); border-left: none; border-radius: 0 3px 3px 0; cursor: pointer; white-space: nowrap; transition: background-color 0.3s, color 0.3s, border-color 0.3s; line-height: 1; }
         #go-button:hover { opacity: 1; }
-        #prompt-input:disabled, #go-button:disabled {
-            background-color: var(--prompt-bar-bg) !important;
-            color: var(--prompt-bar-bg) !important;
-            border-color: var(--prompt-bar-bg) !important;
-            cursor: not-allowed; opacity: 0.8;
-         }
+        #prompt-input:disabled, #go-button:disabled { background-color: var(--prompt-bar-bg) !important; color: var(--prompt-bar-bg) !important; border-color: var(--prompt-bar-bg) !important; cursor: not-allowed; opacity: 0.8; }
 
-        /* Blaue Titel-Leiste */
-        #title-bar {
-            background-color: var(--header-bar-bg); color: var(--header-text);
-            padding: 10px 20px; display: flex; justify-content: space-between;
-            align-items: center; flex-shrink: 0; /* Wichtig */
-            transition: background-color 0.3s, color 0.3s;
-        }
-        .header-left { display: flex; align-items: center; }
-        #logo { height: 40px; margin-right: 15px; vertical-align: middle; }
-        #title-area { display: flex; flex-direction: column; line-height: 1.2; }
-        .main-title { font-size: 1.2em; font-weight: 700; }
-        .sub-title { font-size: 0.8em; font-weight: 400; opacity: 0.9; }
-        .header-right { display: flex; align-items: center; }
-        .darkmode-label { margin-right: 5px; font-size: 0.8em; }
+        /* Hauptbereich */
+        #response-output { flex-grow: 1; overflow-y: auto; padding: 25px; background-color: var(--body-bg); display: flex; flex-direction: column; transition: background-color 0.3s; background-image: url('logo.png'); background-repeat: no-repeat; background-position: center 70%; background-size: 250px auto; background-attachment: fixed; }
+
+        /* Bot-Nachrichten mit Rand */
+        .message.bot-message { background-color: var(--response-bg); color: var(--text-color); padding: 15px 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); margin-bottom: 20px; max-width: 100%; line-height: 1.6; white-space: normal; transition: background-color 0.3s, color 0.3s, border-color 0.3s; position: relative; z-index: 1; border: 1px solid var(--button-send-bg); }
+        [data-theme="dark"] .message.bot-message { box-shadow: 0 2px 5px rgba(0,0,0,0.2); border-color: var(--button-send-bg); }
+
+        /* Styling für HTML Elemente *innerhalb* der Bot-Nachricht */
+        .message.bot-message strong { font-weight: 600; }
+        .message.bot-message em { font-style: italic; }
+        .message.bot-message span[style*="color"] { font-weight: 500; }
+        .message.bot-message span[style*="background-color"] { padding: 0.1em 0.3em; border-radius: 3px; }
+
+        /* Initial-Nachricht (vereinfacht) */
+         .message.initial-message { padding: 25px; text-align: center; border: 1px solid var(--button-send-bg); }
+        .start-gif { display: block; margin: 0 auto 25px auto; max-width: var(--start-gif-max-width); height: auto; }
+        .initial-message .intro-line { margin-bottom: 0; font-weight: 600; }
+
+        /* Andere Nachrichten-Styles */
+        .thinking-message { text-align: center; font-style: italic; color: var(--placeholder-color); background-color: transparent; box-shadow: none; padding: 10px; margin-bottom: 20px; transition: color 0.3s; position: relative; z-index: 1; border: none; }
+        .loading-gif { display: block; height: var(--loading-gif-height); width: auto; margin: 0 auto 10px auto; }
+        .error-message { background-color: #f8d7da; color: #842029; font-weight: bold; transition: none; border-color: #f5c6cb; }
+        [data-theme="dark"] .error-message { background-color: #842029; color: #f8d7da; border-color: #842029; }
+        .follow-up-buttons { margin-top: 15px; padding-top: 10px; border-top: 1px dashed var(--border-color); display: flex; gap: 10px; flex-wrap: wrap; }
+        .follow-up-buttons button { padding: 6px 12px; font-size: 0.9em; border-radius: 15px; border: 1px solid var(--followup-button-border); background-color: var(--followup-button-bg); color: var(--followup-button-text); cursor: pointer; transition: background-color 0.2s, border-color 0.2s; }
+        .follow-up-buttons button:hover { opacity: 0.85; }
+
+        /* Input Area & Footer */
+        #input-area { display: flex; padding: 15px; border-top: 1px solid var(--border-color); background-color: var(--body-bg); flex-shrink: 0; transition: background-color 0.3s, border-color 0.3s; }
+        #user-input { flex-grow: 1; padding: 10px 15px; border: 1px solid var(--border-color); border-radius: 20px; margin-right: 10px; background-color: var(--input-bg); color: var(--text-color); font-size: 1em; resize: none; outline: none; transition: background-color 0.3s, color 0.3s, border-color 0.3s; }
+        #user-input:focus { border-color: #86b7fe; box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25); }
+        [data-theme="dark"] #user-input:focus { border-color: #4dabf7; box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.35); }
+        #send-button { padding: 10px 20px; background-color: var(--button-send-bg); color: var(--button-send-text); border: none; border-radius: 20px; cursor: pointer; font-size: 1em; font-weight: 600; transition: background-color 0.3s, color 0.3s; }
+        #send-button:hover { opacity: 0.9; }
+        #send-button:disabled { background-color: #6c757d; cursor: not-allowed; transition: none; }
+        [data-theme="dark"] #send-button:disabled { background-color: #495057; }
+        #footer-disclaimer { padding: 10px 20px; text-align: left; font-size: 0.75em; color: var(--footer-text); background-color: var(--body-bg); flex-shrink: 0; border-top: 1px solid var(--border-color); transition: background-color 0.3s, color 0.3s, border-color 0.3s; display: flex; justify-content: space-between; align-items: center; }
+        #footer-disclaimer .footer-text { flex-grow: 1; margin-right: 15px; }
+        #footer-disclaimer .darkmode-toggle-container { display: flex; align-items: center; transform: scale(0.8); transform-origin: right center; }
         .switch { position: relative; display: inline-block; width: 44px; height: 24px; vertical-align: middle; }
         .switch input { display:none; }
         .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 24px; }
@@ -119,130 +116,38 @@
         [data-theme="dark"] input:checked + .slider { background-color: #2196F3; }
         input:checked + .slider:before { transform: translateX(20px); }
 
-        /* Hauptbereich für Antworten */
-        #response-output {
-            flex-grow: 1; /* Wichtig: Nimmt den Restplatz ein */
-            overflow-y: auto; /* Scrollbar bei Bedarf */
-            padding: 25px;
-            background-color: var(--body-bg);
-            display: flex; /* Damit Nachrichten untereinander sind */
-            flex-direction: column;
-            transition: background-color 0.3s;
-        }
-
-        /* Allgemeine Bot-Nachricht */
-        .message.bot-message {
-            background-color: var(--response-bg); color: var(--text-color);
-            padding: 15px 20px; border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05); margin-bottom: 20px;
-            max-width: 100%; line-height: 1.6; white-space: pre-wrap;
-            transition: background-color 0.3s, color 0.3s;
-        }
-        [data-theme="dark"] .message.bot-message { box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
-        .message strong, .message b { font-weight: 600; }
-
-        /* Spezifisches Styling für die initiale Nachricht */
-        .message.initial-message { /* Hat jetzt auch .bot-message (siehe HTML) */
-            padding: 25px;
-            text-align: left;
-             /* Andere Stile werden von .bot-message geerbt */
-        }
-        .start-gif {
-             display: block; margin: 0 auto 25px auto;
-             max-width: var(--start-gif-max-width); height: auto;
-        }
-        .initial-message .intro-line {
-             text-align: center; margin-bottom: 25px; font-weight: 600;
-         }
-        .initial-message .instructions-heading {
-             font-weight: 700; font-size: 1.1em; margin-bottom: 15px;
-         }
-         .initial-message p { margin-bottom: 10px; line-height: 1.5; }
-         .initial-message p strong { display: inline-block; margin-right: 5px; }
-
-        /* Thinking/Loading Styling */
-        .thinking-message {
-            text-align: center; font-style: italic; color: var(--placeholder-color);
-            background-color: transparent; box-shadow: none;
-            padding: 10px; margin-bottom: 20px; transition: color 0.3s;
-        }
-        .loading-gif {
-            display: block; height: var(--loading-gif-height); width: auto;
-            margin: 0 auto 10px auto;
-        }
-
-        .error-message {
-            background-color: #f8d7da; color: #842029;
-            font-weight: bold; transition: none;
-        }
-        [data-theme="dark"] .error-message { background-color: #842029; color: #f8d7da; }
-
-        /* Follow-up Buttons Styling */
-        .follow-up-buttons {
-             margin-top: 15px; padding-top: 10px;
-             border-top: 1px dashed var(--border-color);
-             display: flex; gap: 10px; flex-wrap: wrap;
-        }
-        .follow-up-buttons button {
-            padding: 6px 12px; font-size: 0.9em; border-radius: 15px;
-            border: 1px solid var(--followup-button-border);
-            background-color: var(--followup-button-bg);
-            color: var(--followup-button-text); cursor: pointer;
-            transition: background-color 0.2s, border-color 0.2s;
-        }
-        .follow-up-buttons button:hover { opacity: 0.85; }
-
-        /* Untere Chat-Eingabe (für Nutzer) */
-        #input-area {
-            display: flex; padding: 15px; border-top: 1px solid var(--border-color);
-            background-color: var(--body-bg); flex-shrink: 0; /* Wichtig */
-            transition: background-color 0.3s, border-color 0.3s;
-        }
-        #user-input {
-            flex-grow: 1; padding: 10px 15px; border: 1px solid var(--border-color);
-            border-radius: 20px; margin-right: 10px; background-color: var(--input-bg);
-            color: var(--text-color); font-size: 1em; resize: none; outline: none;
-            transition: background-color 0.3s, color 0.3s, border-color 0.3s;
-        }
-        #user-input:focus {
-             border-color: #86b7fe; box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
-         }
-         [data-theme="dark"] #user-input:focus {
-              border-color: #4dabf7; box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.35);
-         }
-        #send-button {
-            padding: 10px 20px; background-color: var(--button-send-bg);
-            color: var(--button-send-text); border: none; border-radius: 20px;
-            cursor: pointer; font-size: 1em; font-weight: 600;
-            transition: background-color 0.3s, color 0.3s;
-        }
-        #send-button:hover { opacity: 0.9; }
-        #send-button:disabled { background-color: #6c757d; cursor: not-allowed; transition: none; }
-        [data-theme="dark"] #send-button:disabled { background-color: #495057; }
-
-        /* Footer Disclaimer */
-        #footer-disclaimer {
-            padding: 10px 20px; text-align: center; font-size: 0.75em;
-            color: var(--footer-text); background-color: var(--body-bg);
-            flex-shrink: 0; /* Wichtig */
-            border-top: 1px solid var(--border-color);
-            transition: background-color 0.3s, color 0.3s, border-color 0.3s;
-        }
-
     </style>
 </head>
 <body>
-    <!-- HTML Struktur bleibt gleich -->
-    <div id="prompt-bar"> <input type="text" id="prompt-input" placeholder="Automation..."> <button id="go-button">Go</button> </div>
-    <header id="title-bar"> <div class="header-left"> <img src="logo.png" alt="Logo" id="logo"> <div id="title-area"> <span class="main-title">Synapse Pro</span> <span class="sub-title">Anki Card AI Assistant</span> </div> </div> <div class="header-right"> <span class="darkmode-label">Darkmode</span> <label class="switch"> <input type="checkbox" id="darkmode-toggle"> <span class="slider round"></span> </label> </div> </header>
-    <main id="response-output"> <div class="message bot-message initial-message"> <img src="start.gif" alt="Start Guide" class="start-gif"> <p class="intro-line"> Use the buttons above to start, don't forget to select your preferred language. </p> <div class="instructions-content"> <p class="instructions-heading">How to use</p> <p><strong>Short:</strong> Explains your current Anki card briefly using different words.</p> <p><strong>Detailed:</strong> Explains your current Anki card in detail.</p> <p><strong>MCQ:</strong> Generates a Multiple Choice Question for your current Anki card.</p> <p><strong>Mnemonic:</strong> Generates a mnemonic or memory aid for your current Anki card.</p> <p><strong>Joke:</strong> Generates a joke related to your current Anki card.</p> <p><strong>Own Prompt:</strong> Write your own automation prompt.</p> <br> <p><strong>Language:</strong> Select your preferred language from the list; the answer will be given in this language.</p> </div> </div> </main>
-    <div id="input-area"> <input type="text" id="user-input" placeholder="Ask something..."> <button id="send-button">Send</button> </div>
-    <footer id="footer-disclaimer"> The Synapse Pro AI can make mistakes. Please check important Information. </footer>
+    <!-- HTML Struktur (wie in test.html) -->
+    <div id="prompt-bar">
+        <input type="text" id="prompt-input" placeholder="Automation...">
+        <button id="go-button">Go</button>
+    </div>
+
+    <main id="response-output">
+        <div class="message bot-message initial-message">
+            <img src="start.gif" alt="Start Guide" class="start-gif">
+            <p class="intro-line"> Use the buttons above to start, don't forget to select your preferred language. </p>
+        </div>
+    </main>
+
+    <div id="input-area">
+        <input type="text" id="user-input" placeholder="Ask something... (paste image URL if needed)">
+        <button id="send-button">Send</button>
+    </div>
+
+    <footer id="footer-disclaimer">
+        <span class="footer-text">The Synapse Pro AI can make mistakes. Please check important Information.</span>
+        <div class="darkmode-toggle-container">
+             <label class="switch">
+                <input type="checkbox" id="darkmode-toggle">
+                <span class="slider round"></span>
+             </label>
+        </div>
+    </footer>
 
     <script>
-        // JAVASCRIPT LOGIK BLEIBT EXAKT GLEICH WIE IN DER VORHERIGEN ANTWORT
-        // (Mit Backend-Aufruf, Kontexterhaltung, Follow-up Buttons etc.)
-
         // --- DOM Element References ---
         const responseOutput = document.getElementById('response-output');
         const promptInput = document.getElementById('prompt-input');
@@ -252,12 +157,12 @@
         const darkModeToggle = document.getElementById('darkmode-toggle');
 
         // --- CONFIGURATION ---
-        const BACKEND_API_URL = '/api/chat'; // Pfad zur Serverless Function
+        const BACKEND_API_URL = '/api/chat'; // <<< WICHTIG: Ziel ist unser Backend
         const MAX_HISTORY_LENGTH = 10; // Max messages in history
 
         // --- Global State ---
         let chatHistory = [];
-        // System Prompt ist im Backend definiert!
+        // System Prompt ist jetzt im Backend! API Key ist auch im Backend!
 
         // --- Event Listeners ---
         goButton.addEventListener('click', () => handleSend(promptInput));
@@ -277,26 +182,31 @@
             else { darkModeToggle.checked = false; document.documentElement.removeAttribute('data-theme'); }
         }
 
-        function createMessageElement(text, type = 'bot', isThinking = false, isError = false) {
+        // createMessageElement verwendet innerHTML für HTML-Rendering
+        function createMessageElement(htmlContent, type = 'bot', isThinking = false, isError = false) {
              const messageDiv = document.createElement('div');
-             messageDiv.classList.add('message'); // Basisklasse
+             messageDiv.classList.add('message');
              if (isThinking) {
-                 messageDiv.classList.add('thinking-message'); // Keine bot-message hier
+                 messageDiv.classList.add('thinking-message'); // Kein bot-message hier
                  const img = document.createElement('img'); img.src = 'loading.gif'; img.alt = 'Loading...'; img.classList.add('loading-gif'); messageDiv.appendChild(img);
-                 const textNode = document.createTextNode('Analyzing your Anki Card...'); messageDiv.appendChild(textNode);
+                 const textNode = document.createTextNode('Analyzing your input...'); messageDiv.appendChild(textNode);
                  messageDiv.dataset.thinkingId = `thinking-${Date.now()}`;
              } else if (isError) {
                  messageDiv.classList.add('bot-message', 'error-message'); // Fehler bekommen Bot-Styling
-                 messageDiv.textContent = text;
+                 messageDiv.textContent = htmlContent; // Fehler sind nur Text
              } else if (type === 'bot') {
                  messageDiv.classList.add('bot-message'); // Normale Bot-Nachricht
-                 let formattedText = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>'); formattedText = formattedText.replace(/\n/g, '<br>'); messageDiv.innerHTML = formattedText;
+                 // --- Direkte HTML-Zuweisung ---
+                 // Vorsicht: Nur verwenden, wenn der HTML-Inhalt vom vertrauenswürdigen Backend kommt.
+                 // In diesem Fall kommt es vom Backend nach der AI-Verarbeitung.
+                 messageDiv.innerHTML = htmlContent;
              }
             return messageDiv;
         }
 
         function scrollToBottom() { setTimeout(() => { responseOutput.scrollTop = responseOutput.scrollHeight; }, 50); }
 
+        // generateFollowUpButtons bleibt gleich
         function generateFollowUpButtons(messageElement) {
             const buttonArea = document.createElement('div');
             buttonArea.classList.add('follow-up-buttons');
@@ -309,52 +219,154 @@
                 };
                 buttonArea.appendChild(button);
             });
-            messageElement.appendChild(buttonArea); scrollToBottom();
+            // Nur an Elemente anhängen, die nicht 'thinking' oder 'error' sind
+            if (!messageElement.classList.contains('thinking-message') && !messageElement.classList.contains('error-message')) {
+               messageElement.appendChild(buttonArea);
+            }
+            scrollToBottom();
         }
 
+        // handleSend ruft jetzt das Backend auf
         async function handleSend(inputElement) {
-            const inputText = inputElement.value.trim(); if (!inputText) return;
-            const oldButtonAreas = responseOutput.querySelectorAll('.follow-up-buttons'); oldButtonAreas.forEach(area => area.remove());
-            promptInput.disabled = true; goButton.disabled = true; userInput.disabled = true; sendButton.disabled = true; inputElement.value = '';
-            const initialMessage = responseOutput.querySelector('.initial-message'); if (initialMessage && initialMessage.style.display !== 'none') { initialMessage.style.display = 'none'; }
-            const thinkingMsgElement = createMessageElement('', 'bot', true); responseOutput.appendChild(thinkingMsgElement); scrollToBottom();
+            const fullInputText = inputElement.value.trim();
+             // Verhindere leere Nachrichten nur vom User-Input, erlaube potenziell leere Auslöser vom Prompt-Input (falls das Addon das macht)
+            if (!fullInputText && inputElement.id === 'user-input') return;
+
+            const oldButtonAreas = responseOutput.querySelectorAll('.follow-up-buttons');
+            oldButtonAreas.forEach(area => area.remove());
+            promptInput.disabled = true; goButton.disabled = true; userInput.disabled = true; sendButton.disabled = true;
+
+            let thinkingMsgElement = null;
+            // Zeige "Thinking" nur für manuellen User-Input an
+            if (inputElement.id === 'user-input') {
+                 const initialMessage = responseOutput.querySelector('.initial-message');
+                 if (initialMessage && initialMessage.style.display !== 'none') { initialMessage.style.display = 'none'; }
+                 thinkingMsgElement = createMessageElement('', 'bot', true);
+                 responseOutput.appendChild(thinkingMsgElement);
+                 scrollToBottom();
+            }
+
+            // --- Nachricht für Backend vorbereiten ---
+            let messageToSendToBackend;
+            let textForHistory = fullInputText; // Text, der im Frontend-Verlauf gespeichert wird
+
+            const urlRegex = /(https?:\/\/[^\s]+)/g;
+            const foundUrls = fullInputText.match(urlRegex);
+            let imageUrl = null;
+
+            // Wenn eine URL gefunden wird (nur im User-Input relevant)
+            if (inputElement.id === 'user-input' && foundUrls && foundUrls.length > 0) {
+                imageUrl = foundUrls[0];
+                const textPart = fullInputText.replace(imageUrl, '').trim();
+                textForHistory = `${textPart || 'Analyze Image'} [Image detected]`; // Angepasster Text für Verlauf
+                // Sende ein Objekt an das Backend, das es als multimodal erkennt
+                messageToSendToBackend = {
+                    type: "multimodal",
+                    text: textPart || "Analyze this image.", // Standardtext, wenn kein Text dabei ist
+                    imageUrl: imageUrl
+                };
+                console.log("Sending multimodal request data to backend:", messageToSendToBackend);
+            } else {
+                // Normale Textnachricht (von prompt-input oder user-input ohne URL)
+                messageToSendToBackend = fullInputText; // Einfacher String
+                textForHistory = fullInputText; // Der eingegebene Text
+                console.log("Sending text request data to backend:", messageToSendToBackend);
+            }
+
+            // Leere den Input nur für den User-Input
+            if (inputElement.id === 'user-input') {
+                inputElement.value = '';
+            }
 
             try {
+                // --- Aufruf an das Backend ---
                 const response = await fetch(BACKEND_API_URL, {
-                    method: 'POST', headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ userMessage: inputText, chatHistory: chatHistory })
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        userMessage: messageToSendToBackend, // Kann String oder Objekt sein
+                        chatHistory: chatHistory
+                    })
                 });
-                const currentThinkingElement = responseOutput.querySelector(`[data-thinking-id="${thinkingMsgElement.dataset.thinkingId}"]`);
+
+                const currentThinkingElement = thinkingMsgElement ? responseOutput.querySelector(`[data-thinking-id="${thinkingMsgElement.dataset.thinkingId}"]`) : null;
+
+                // Fehler vom Backend abfangen
                 if (!response.ok) {
-                    const errorData = await response.json().catch(() => ({ error: `Fehler beim Backend-Aufruf: ${response.statusText}` }));
-                    console.error('Backend/API Error:', response.status, errorData); const errorMessage = `Fehler ${response.status}: ${errorData.error || response.statusText}`;
+                    let errorMessage = `Backend Fehler ${response.status}: ${response.statusText}`;
+                    try {
+                         const errorData = await response.json();
+                         errorMessage = `Backend Fehler ${response.status}: ${errorData.error || response.statusText}`;
+                    } catch (e) { /* Nichts tun, wenn die Fehlerantwort kein JSON ist */ }
+
+                    console.error('Backend Error:', errorMessage);
                     const errorElement = createMessageElement(errorMessage, 'bot', false, true);
-                    if (currentThinkingElement) { currentThinkingElement.replaceWith(errorElement); } else { responseOutput.appendChild(errorElement); } return;
+                    if (currentThinkingElement) { currentThinkingElement.replaceWith(errorElement); }
+                    else {
+                        // Wenn Fehler bei Prompt-Bar auftritt, vielleicht im normalen Chat anzeigen?
+                         console.error("Error during hidden prompt, displaying in chat:", errorMessage);
+                         responseOutput.appendChild(errorElement); // Fehler sichtbar machen
+                    }
+                    return; // Frühzeitiger Ausstieg
                 }
-                const data = await response.json();
-                if (data.choices && data.choices.length > 0 && data.choices[0].message) {
-                    const botReply = data.choices[0].message.content; const replyElement = createMessageElement(botReply, 'bot');
-                    chatHistory.push({ role: "user", content: inputText }); chatHistory.push({ role: "assistant", content: botReply });
-                    if (chatHistory.length > MAX_HISTORY_LENGTH) { chatHistory = chatHistory.slice(-MAX_HISTORY_LENGTH); }
-                    if (currentThinkingElement) { currentThinkingElement.replaceWith(replyElement); generateFollowUpButtons(replyElement); }
-                    else { responseOutput.appendChild(replyElement); generateFollowUpButtons(replyElement); }
-                } else if (data.error) {
-                     console.error('Backend returned controlled error:', data.error); const errorElement = createMessageElement(`Backend Fehler: ${data.error}`, 'bot', false, true);
-                     if (currentThinkingElement) { currentThinkingElement.replaceWith(errorElement); } else { responseOutput.appendChild(errorElement); } return;
-                } else { throw new Error('Unerwartete Antwortstruktur vom Backend.'); }
+
+                // Erfolgreiche Antwort vom Backend
+                const data = await response.json(); // Backend sendet die Struktur von OpenRouter weiter
+
+                // Antwort verarbeiten (sollte HTML sein)
+                if (data.choices && data.choices.length > 0 && data.choices[0].message && data.choices[0].message.content) {
+                    const botReplyHtml = data.choices[0].message.content; // HTML vom Backend
+
+                    // Verlauf aktualisieren (speichere den ursprünglichen Text und die HTML-Antwort)
+                    // Stelle sicher, dass auch leere Nachrichten vom Prompt-Input im Verlauf landen, wenn sie gesendet wurden
+                    if (textForHistory || inputElement.id === 'prompt-input') {
+                       chatHistory.push({ role: "user", content: textForHistory });
+                       chatHistory.push({ role: "assistant", content: botReplyHtml }); // HTML im Verlauf speichern
+                       if (chatHistory.length > MAX_HISTORY_LENGTH) { chatHistory = chatHistory.slice(-MAX_HISTORY_LENGTH); }
+                    }
+
+
+                    // HTML im Chat anzeigen (nur wenn es eine sichtbare Interaktion war)
+                    if (currentThinkingElement) {
+                         const replyElement = createMessageElement(botReplyHtml, 'bot'); // Rendert HTML
+                         currentThinkingElement.replaceWith(replyElement);
+                         generateFollowUpButtons(replyElement); // Füge Follow-up Buttons hinzu
+                     } else {
+                         // Antwort auf Prompt-Bar Anfrage (wird nicht direkt angezeigt, aber geloggt & im Verlauf gespeichert)
+                         console.log("Received hidden prompt response (HTML stored in history):", botReplyHtml.substring(0, 100) + "...");
+                     }
+                } else if (data.error) { // Falls das Backend einen kontrollierten Fehler sendet
+                     console.error('Backend returned controlled error:', data.error);
+                     const errorElement = createMessageElement(`Backend Fehler: ${data.error}`, 'bot', false, true);
+                     if (currentThinkingElement) { currentThinkingElement.replaceWith(errorElement); }
+                     else { responseOutput.appendChild(errorElement); } // Fehler sichtbar machen
+                     return;
+                 } else {
+                     // Unerwartete Antwortstruktur
+                     throw new Error('Unerwartete Antwortstruktur vom Backend.');
+                 }
+
             } catch (error) {
+                // Genereller Kommunikationsfehler mit dem Backend
                 console.error('Fehler bei der Kommunikation mit dem Backend:', error);
-                const currentThinkingElement = responseOutput.querySelector(`[data-thinking-id="${thinkingMsgElement.dataset.thinkingId}"]`);
-                const displayError = `Kommunikationsfehler: ${error.message}`; const errorElement = createMessageElement(displayError, 'bot', false, true);
-                if (currentThinkingElement) { currentThinkingElement.replaceWith(errorElement); } else { responseOutput.appendChild(errorElement); }
+                const currentThinkingElement = thinkingMsgElement ? responseOutput.querySelector(`[data-thinking-id="${thinkingMsgElement.dataset.thinkingId}"]`) : null;
+                const displayError = `Kommunikationsfehler: ${error.message}`;
+                const errorElement = createMessageElement(displayError, 'bot', false, true);
+                 if (currentThinkingElement) { currentThinkingElement.replaceWith(errorElement); }
+                 else { responseOutput.appendChild(errorElement); } // Fehler sichtbar machen
             } finally {
-                promptInput.disabled = false; goButton.disabled = false; userInput.disabled = false; sendButton.disabled = false; userInput.focus(); scrollToBottom();
+                // Buttons wieder aktivieren
+                promptInput.disabled = false; goButton.disabled = false; userInput.disabled = false; sendButton.disabled = false;
+                // Fokus auf User-Input setzen, wenn es die letzte Interaktion war
+                if (inputElement.id === 'user-input') { userInput.focus(); }
+                scrollToBottom(); // Sicherstellen, dass alles sichtbar ist
             }
         }
 
+
         // --- Initialization ---
         applySavedTheme();
-        userInput.focus();
+        userInput.focus(); // Standardmäßig Fokus auf das manuelle Inputfeld
 
     </script>
 </body>
