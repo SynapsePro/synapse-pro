@@ -1,7 +1,7 @@
 // /api/chat.js
 
 // Node.js >= 18 hat fetch eingebaut. Für ältere Versionen ggf. 'node-fetch' installieren.
-// const fetch = require('node-fetch'); // Nur wenn Node < 18 und lokal getestet wird
+// import fetch from 'node-fetch'; // Nur wenn Node < 18
 
 export default async function handler(req, res) {
     // 1. Nur POST-Anfragen erlauben
@@ -22,7 +22,8 @@ export default async function handler(req, res) {
 
         // 3. API-Key SICHER aus Umgebungsvariablen holen
         const apiKey = process.env.OPENROUTER_API_KEY;
-        const modelName = process.env.OPENROUTER_MODEL_NAME || 'mistralai/mixtral-8x7b-instruct'; // Modell optional auch aus Env Vars
+        // UPDATED: Use gpt-4o-mini as default if OPENROUTER_MODEL_NAME is not set
+        const modelName = process.env.OPENROUTER_MODEL_NAME || 'openai/gpt-4o-mini';
 
         if (!apiKey) {
             console.error('FEHLER: OPENROUTER_API_KEY nicht in Umgebungsvariablen gesetzt!');
@@ -30,7 +31,7 @@ export default async function handler(req, res) {
             return res.status(500).json({ error: 'Serverkonfigurationsfehler.' });
         }
 
-        // 4. System Prompt definieren (könnte auch aus Frontend kommen, aber hier sicherer)
+        // 4. System Prompt definieren
         const systemPrompt = {
             role: "system",
             content: "You are Synapse Pro, a helpful assistant for medical students, explaining Anki cards. Always respond in the language used by the user in their last prompt. Format your answers clearly and use Markdown for emphasis."
@@ -40,14 +41,14 @@ export default async function handler(req, res) {
         const messagesToSend = [
             systemPrompt,
             ...history, // Vorheriger Verlauf
-            { role: "user", content: userMessage } // Aktuelle Nachricht
+            { role: "user", content: userMessage } // Aktuelle Nachricht (nur Text)
         ];
 
         // 6. OpenRouter API-Endpunkt und Header vorbereiten
         const openRouterUrl = 'https://openrouter.ai/api/v1/chat/completions';
         // Vercel stellt die URL zur Verfügung, nützlich für Header
         const siteUrl = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000';
-        const appTitle = 'Synapse Pro Chat (Vercel)';
+        const appTitle = process.env.SITE_TITLE || 'Synapse Pro Chat'; // Optional: Site Title aus Env Var
 
         // 7. Fetch-Aufruf an OpenRouter (vom Backend!)
         const response = await fetch(openRouterUrl, {
@@ -55,14 +56,15 @@ export default async function handler(req, res) {
             headers: {
                 'Authorization': `Bearer ${apiKey}`, // Der geheime Key!
                 'Content-Type': 'application/json',
-                // Empfohlene Header für OpenRouter:
+                // Optionale, aber empfohlene Header für OpenRouter:
                 'HTTP-Referer': siteUrl,
                 'X-Title': appTitle
             },
             body: JSON.stringify({
-                model: modelName,
+                model: modelName, // Jetzt standardmäßig gpt-4o-mini
                 messages: messagesToSend,
                 // Weitere Parameter wie temperature, max_tokens etc. könnten hier hin
+                // temperature: 0.7,
             })
         });
 
@@ -75,13 +77,16 @@ export default async function handler(req, res) {
             }));
             console.error('OpenRouter API Error:', response.status, errorData);
              // Gib den Status von OpenRouter und eine generische Fehlermeldung zurück
-             return res.status(response.status).json({ error: `API Fehler: ${errorData?.error?.message || response.statusText}` });
+             // Beachte: OpenRouter sendet oft Details im `error`-Objekt
+             const errorMessage = errorData?.error?.message || response.statusText;
+             return res.status(response.status).json({ error: `API Fehler (${response.status}): ${errorMessage}` });
         }
 
         // Erfolgreiche Antwort von OpenRouter
         const data = await response.json();
 
         // 9. Erfolgreiche Antwort an das Frontend zurücksenden
+        // Das Frontend erwartet das 'choices'-Array etc. direkt im Body
         res.status(200).json(data);
 
     } catch (error) {
