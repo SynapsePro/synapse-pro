@@ -1,361 +1,132 @@
-<!DOCTYPE html>
-<html lang="de">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Synapse Pro - Mixtral Chat</title>
-    <!-- Import Inter Font -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+// /api/chat.js
 
-    <style>
-        /* VOLLSTÄNDIGES CSS WIEDERHERGESTELLT VON FUNKTIONIERENDER UI-VERSION */
-        :root {
-            --header-bar-bg: #0071D3;
-            --header-text: #ffffff;
-            --body-bg: #f7f7f8;
-            --prompt-bar-bg: var(--header-bar-bg); /* Blau für obere Leiste */
-            --response-bg: #ffffff;
-            --text-color: #212529;
-            --border-color: #dee2e6;
-            --input-bg: #ffffff;
-            --placeholder-color: #6c757d;
-            --button-go-bg: #f8f9fa; /* Wird überschrieben */
-            --button-go-text: #343a40;/* Wird überschrieben */
-            --button-send-bg: #0071D3;
-            --button-send-text: #ffffff;
-            --footer-text: #6c757d;
-            --loading-gif-height: 60px;
-            --start-gif-max-width: 100px;
-            --followup-button-bg: #e9ecef;
-            --followup-button-text: #495057;
-            --followup-button-border: #ced4da;
+// Using Node.js built-in fetch (available in Node.js >= 18, common on Vercel)
+// No need to install node-fetch usually.
+
+export default async function handler(req, res) {
+    // 1. Allow only POST requests
+    if (req.method !== 'POST') {
+        res.setHeader('Allow', ['POST']);
+        return res.status(405).end(`Method ${req.method} Not Allowed`);
+    }
+
+    try {
+        // 2. Get user message and chat history from request body
+        const { userMessage, chatHistory } = req.body;
+
+        // Basic validation
+        if (typeof userMessage !== 'string' || userMessage.trim() === '') {
+            // Allow technically empty messages if needed for specific prompts from prompt-bar
+            // but log a warning if it seems unintentional from user input.
+             if (userMessage === undefined || userMessage === null) {
+                 console.warn('Received request with missing userMessage.');
+                 return res.status(400).json({ error: 'userMessage is missing in the request body.' });
+             } // Allow empty strings otherwise, maybe intended.
         }
 
-        /* --- DARK MODE Variables --- */
-        [data-theme="dark"] {
-            --header-bar-bg: #005eb8;
-            --header-text: #e0e0e0;
-            --body-bg: #212529;
-            --response-bg: #343a40;
-            --text-color: #f8f9fa;
-            --border-color: #495057;
-            --input-bg: #495057;
-            --placeholder-color: #adb5bd;
-            --button-send-bg: #005eb8;
-            --button-send-text: #ffffff;
-            --footer-text: #adb5bd;
-            --followup-button-bg: #495057;
-            --followup-button-text: #f8f9fa;
-            --followup-button-border: #6c757d;
+        // Ensure chatHistory is an array, default to empty if not provided or invalid
+        const history = Array.isArray(chatHistory) ? chatHistory : [];
+
+        // 3. Securely get API key and model name from environment variables
+        const apiKey = process.env.OPENROUTER_API_KEY;
+        // Allow overriding the model via environment variable, default to a capable model
+        const modelName = process.env.OPENROUTER_MODEL_NAME || 'openai/gpt-4o-mini'; // Or 'mistralai/mixtral-8x7b-instruct' etc.
+
+        if (!apiKey) {
+            console.error('FATAL ERROR: OPENROUTER_API_KEY environment variable is not set!');
+            // Return a generic server error to the client, hide specific details
+            return res.status(500).json({ error: 'Server configuration error.' });
         }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; }
+        // 4. Define the System Prompt - CRITICAL FOR HTML FORMATTING
+        // This prompt instructs the AI on its role and MANDATES HTML output.
+        const systemPrompt = {
+            role: "system",
+            content: `You are Synapse Pro, a helpful AI assistant for medical students, primarily explaining Anki flashcards.
+ALWAYS respond in the language used by the user in their last prompt.
 
-        body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--body-bg);
-            color: var(--text-color);
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
-            overflow: hidden; /* Verhindert Scrollen des Body */
-            transition: background-color 0.3s, color 0.3s;
-        }
+**CRITICAL FORMATTING INSTRUCTIONS:**
+Your *entire* response MUST be formatted using specific HTML tags. Do **NOT** use Markdown (like **bold** or *italic*). Adhere strictly to the following HTML tags:
+*   Use \`<strong>\` for general bold text (e.g., main points, terms being defined).
+*   Use \`<em>\` for italics where appropriate (e.g., emphasis, foreign words).
+*   Use \`<br>\` for all line breaks. Do NOT use newline characters (\`\\n\`).
+*   Highlight important medical terms, drug names, or specific entities using: \`<span style='color: var(--highlight-color-term, #005EB8);'>Term</span>\`. Use the CSS variable \`--highlight-color-term\` if possible, otherwise default to #005EB8 (a dark blue).
+*   Highlight key concepts, definitions, or short explanatory phrases using: \`<span style='background-color: var(--highlight-bg-concept, #FFFACD);'>Concept phrase</span>\`. Use the CSS variable \`--highlight-bg-concept\` if possible, otherwise default to #FFFACD (light yellow).
 
-        /* Obere Prompt-Leiste (Visuell versteckt) */
-        #prompt-bar {
-            display: flex;
-            align-items: center;
-            padding: 5px 10px;
-            background-color: var(--prompt-bar-bg);
-            flex-shrink: 0; /* Wichtig */
-            transition: background-color 0.3s;
-        }
-        #prompt-input {
-            flex-grow: 1; padding: 4px 8px; font-size: 0.8em;
-            border: 1px solid var(--prompt-bar-bg); border-radius: 3px 0 0 3px;
-            background-color: var(--prompt-bar-bg); color: var(--prompt-bar-bg);
-            border-right: none; outline: none; box-shadow: none;
-            transition: background-color 0.3s, border-color 0.3s, color 0.3s;
-        }
-        #prompt-input::placeholder { color: var(--prompt-bar-bg); opacity: 1; }
-        #prompt-input:focus { border-color: var(--prompt-bar-bg); box-shadow: none; }
-        #go-button {
-            padding: 4px 10px; font-size: 0.8em; font-weight: 600;
-            background-color: var(--prompt-bar-bg); color: var(--prompt-bar-bg);
-            border: 1px solid var(--prompt-bar-bg); border-left: none;
-            border-radius: 0 3px 3px 0; cursor: pointer; white-space: nowrap;
-            transition: background-color 0.3s, color 0.3s, border-color 0.3s;
-        }
-        #go-button:hover { opacity: 1; }
-        #prompt-input:disabled, #go-button:disabled {
-            background-color: var(--prompt-bar-bg) !important;
-            color: var(--prompt-bar-bg) !important;
-            border-color: var(--prompt-bar-bg) !important;
-            cursor: not-allowed; opacity: 0.8;
-         }
+**Example Interaction:**
+User Prompt: Explain myocardial infarction.
+Correct HTML Output Example: \`<strong><span style='color: var(--highlight-color-term, #005EB8);'>Myocardial infarction</span></strong> (MI), commonly known as a <span style='background-color: var(--highlight-bg-concept, #FFFACD);'>heart attack</span>, occurs when blood flow decreases or stops to a part of the heart, causing damage to the heart muscle.<br>Key risk factors include high blood pressure, smoking, diabetes, and high cholesterol.\`
 
-        /* Blaue Titel-Leiste */
-        #title-bar {
-            background-color: var(--header-bar-bg); color: var(--header-text);
-            padding: 10px 20px; display: flex; justify-content: space-between;
-            align-items: center; flex-shrink: 0; /* Wichtig */
-            transition: background-color 0.3s, color 0.3s;
-        }
-        .header-left { display: flex; align-items: center; }
-        #logo { height: 40px; margin-right: 15px; vertical-align: middle; }
-        #title-area { display: flex; flex-direction: column; line-height: 1.2; }
-        .main-title { font-size: 1.2em; font-weight: 700; }
-        .sub-title { font-size: 0.8em; font-weight: 400; opacity: 0.9; }
-        .header-right { display: flex; align-items: center; }
-        .darkmode-label { margin-right: 5px; font-size: 0.8em; }
-        .switch { position: relative; display: inline-block; width: 44px; height: 24px; vertical-align: middle; }
-        .switch input { display:none; }
-        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 24px; }
-        .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
-        input:checked + .slider { background-color: #0071D3; }
-        [data-theme="dark"] input:checked + .slider { background-color: #2196F3; }
-        input:checked + .slider:before { transform: translateX(20px); }
+Ensure your explanation is clear, accurate, concise, and medically sound. Maintain the requested HTML format rigorously throughout the entire response.`
+        };
 
-        /* Hauptbereich für Antworten */
-        #response-output {
-            flex-grow: 1; /* Wichtig: Nimmt den Restplatz ein */
-            overflow-y: auto; /* Scrollbar bei Bedarf */
-            padding: 25px;
-            background-color: var(--body-bg);
-            display: flex; /* Damit Nachrichten untereinander sind */
-            flex-direction: column;
-            transition: background-color 0.3s;
-        }
+        // 5. Construct the messages array for the API call
+        const messagesToSend = [
+            systemPrompt, // Start with the system's instructions
+            ...history,   // Include the previous conversation history
+            { role: "user", content: userMessage } // Add the latest user message
+        ];
 
-        /* Allgemeine Bot-Nachricht */
-        .message.bot-message {
-            background-color: var(--response-bg); color: var(--text-color);
-            padding: 15px 20px; border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05); margin-bottom: 20px;
-            max-width: 100%; line-height: 1.6; white-space: pre-wrap;
-            transition: background-color 0.3s, color 0.3s;
-        }
-        [data-theme="dark"] .message.bot-message { box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
-        .message strong, .message b { font-weight: 600; }
+        // 6. Prepare for OpenRouter API call
+        const openRouterUrl = 'https://openrouter.ai/api/v1/chat/completions';
 
-        /* Spezifisches Styling für die initiale Nachricht */
-        .message.initial-message { /* Hat jetzt auch .bot-message (siehe HTML) */
-            padding: 25px;
-            text-align: left;
-             /* Andere Stile werden von .bot-message geerbt */
-        }
-        .start-gif {
-             display: block; margin: 0 auto 25px auto;
-             max-width: var(--start-gif-max-width); height: auto;
-        }
-        .initial-message .intro-line {
-             text-align: center; margin-bottom: 25px; font-weight: 600;
-         }
-        .initial-message .instructions-heading {
-             font-weight: 700; font-size: 1.1em; margin-bottom: 15px;
-         }
-         .initial-message p { margin-bottom: 10px; line-height: 1.5; }
-         .initial-message p strong { display: inline-block; margin-right: 5px; }
+        // Recommended headers for OpenRouter, helps them identify traffic source
+        // Vercel provides process.env.VERCEL_URL
+        const siteUrl = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000'; // Fallback for local dev
+        const appTitle = 'Synapse Pro Chat (Vercel)';
 
-        /* Thinking/Loading Styling */
-        .thinking-message {
-            text-align: center; font-style: italic; color: var(--placeholder-color);
-            background-color: transparent; box-shadow: none;
-            padding: 10px; margin-bottom: 20px; transition: color 0.3s;
-        }
-        .loading-gif {
-            display: block; height: var(--loading-gif-height); width: auto;
-            margin: 0 auto 10px auto;
-        }
+        // 7. Make the fetch request FROM THE BACKEND to OpenRouter
+        console.log(`Sending request to OpenRouter with model: ${modelName}`);
+        const response = await fetch(openRouterUrl, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${apiKey}`, // The secure API key
+                'Content-Type': 'application/json',
+                'HTTP-Referer': siteUrl, // Your site URL
+                'X-Title': appTitle      // Your application title
+            },
+            body: JSON.stringify({
+                model: modelName,
+                messages: messagesToSend,
+                // Optional parameters (can be added here):
+                // temperature: 0.7,
+                // max_tokens: 1000,
+                // stream: false // Set to true if you want streaming responses
+            })
+        });
 
-        .error-message {
-            background-color: #f8d7da; color: #842029;
-            font-weight: bold; transition: none;
-        }
-        [data-theme="dark"] .error-message { background-color: #842029; color: #f8d7da; }
-
-        /* Follow-up Buttons Styling */
-        .follow-up-buttons {
-             margin-top: 15px; padding-top: 10px;
-             border-top: 1px dashed var(--border-color);
-             display: flex; gap: 10px; flex-wrap: wrap;
-        }
-        .follow-up-buttons button {
-            padding: 6px 12px; font-size: 0.9em; border-radius: 15px;
-            border: 1px solid var(--followup-button-border);
-            background-color: var(--followup-button-bg);
-            color: var(--followup-button-text); cursor: pointer;
-            transition: background-color 0.2s, border-color 0.2s;
-        }
-        .follow-up-buttons button:hover { opacity: 0.85; }
-
-        /* Untere Chat-Eingabe (für Nutzer) */
-        #input-area {
-            display: flex; padding: 15px; border-top: 1px solid var(--border-color);
-            background-color: var(--body-bg); flex-shrink: 0; /* Wichtig */
-            transition: background-color 0.3s, border-color 0.3s;
-        }
-        #user-input {
-            flex-grow: 1; padding: 10px 15px; border: 1px solid var(--border-color);
-            border-radius: 20px; margin-right: 10px; background-color: var(--input-bg);
-            color: var(--text-color); font-size: 1em; resize: none; outline: none;
-            transition: background-color 0.3s, color 0.3s, border-color 0.3s;
-        }
-        #user-input:focus {
-             border-color: #86b7fe; box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
-         }
-         [data-theme="dark"] #user-input:focus {
-              border-color: #4dabf7; box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.35);
-         }
-        #send-button {
-            padding: 10px 20px; background-color: var(--button-send-bg);
-            color: var(--button-send-text); border: none; border-radius: 20px;
-            cursor: pointer; font-size: 1em; font-weight: 600;
-            transition: background-color 0.3s, color 0.3s;
-        }
-        #send-button:hover { opacity: 0.9; }
-        #send-button:disabled { background-color: #6c757d; cursor: not-allowed; transition: none; }
-        [data-theme="dark"] #send-button:disabled { background-color: #495057; }
-
-        /* Footer Disclaimer */
-        #footer-disclaimer {
-            padding: 10px 20px; text-align: center; font-size: 0.75em;
-            color: var(--footer-text); background-color: var(--body-bg);
-            flex-shrink: 0; /* Wichtig */
-            border-top: 1px solid var(--border-color);
-            transition: background-color 0.3s, color 0.3s, border-color 0.3s;
-        }
-
-    </style>
-</head>
-<body>
-    <!-- HTML Struktur bleibt gleich -->
-    <div id="prompt-bar"> <input type="text" id="prompt-input" placeholder="Automation..."> <button id="go-button">Go</button> </div>
-    <header id="title-bar"> <div class="header-left"> <img src="logo.png" alt="Logo" id="logo"> <div id="title-area"> <span class="main-title">Synapse Pro</span> <span class="sub-title">Anki Card AI Assistant</span> </div> </div> <div class="header-right"> <span class="darkmode-label">Darkmode</span> <label class="switch"> <input type="checkbox" id="darkmode-toggle"> <span class="slider round"></span> </label> </div> </header>
-    <main id="response-output"> <div class="message bot-message initial-message"> <img src="start.gif" alt="Start Guide" class="start-gif"> <p class="intro-line"> Use the buttons above to start, don't forget to select your preferred language. </p> <div class="instructions-content"> <p class="instructions-heading">How to use</p> <p><strong>Short:</strong> Explains your current Anki card briefly using different words.</p> <p><strong>Detailed:</strong> Explains your current Anki card in detail.</p> <p><strong>MCQ:</strong> Generates a Multiple Choice Question for your current Anki card.</p> <p><strong>Mnemonic:</strong> Generates a mnemonic or memory aid for your current Anki card.</p> <p><strong>Joke:</strong> Generates a joke related to your current Anki card.</p> <p><strong>Own Prompt:</strong> Write your own automation prompt.</p> <br> <p><strong>Language:</strong> Select your preferred language from the list; the answer will be given in this language.</p> </div> </div> </main>
-    <div id="input-area"> <input type="text" id="user-input" placeholder="Ask something..."> <button id="send-button">Send</button> </div>
-    <footer id="footer-disclaimer"> The Synapse Pro AI can make mistakes. Please check important Information. </footer>
-
-    <script>
-        // JAVASCRIPT LOGIK BLEIBT EXAKT GLEICH WIE IN DER VORHERIGEN ANTWORT
-        // (Mit Backend-Aufruf, Kontexterhaltung, Follow-up Buttons etc.)
-
-        // --- DOM Element References ---
-        const responseOutput = document.getElementById('response-output');
-        const promptInput = document.getElementById('prompt-input');
-        const goButton = document.getElementById('go-button');
-        const userInput = document.getElementById('user-input');
-        const sendButton = document.getElementById('send-button');
-        const darkModeToggle = document.getElementById('darkmode-toggle');
-
-        // --- CONFIGURATION ---
-        const BACKEND_API_URL = '/api/chat'; // Pfad zur Serverless Function
-        const MAX_HISTORY_LENGTH = 10; // Max messages in history
-
-        // --- Global State ---
-        let chatHistory = [];
-        // System Prompt ist im Backend definiert!
-
-        // --- Event Listeners ---
-        goButton.addEventListener('click', () => handleSend(promptInput));
-        promptInput.addEventListener('keypress', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(promptInput); } });
-        sendButton.addEventListener('click', () => handleSend(userInput));
-        userInput.addEventListener('keypress', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(userInput); } });
-        darkModeToggle.addEventListener('change', toggleTheme);
-
-        // --- Functions ---
-        function toggleTheme() {
-             if (darkModeToggle.checked) { document.documentElement.setAttribute('data-theme', 'dark'); localStorage.setItem('theme', 'dark'); }
-             else { document.documentElement.removeAttribute('data-theme'); localStorage.setItem('theme', 'light'); }
-        }
-        function applySavedTheme() {
-            const savedTheme = localStorage.getItem('theme');
-            if (savedTheme === 'dark') { darkModeToggle.checked = true; document.documentElement.setAttribute('data-theme', 'dark'); }
-            else { darkModeToggle.checked = false; document.documentElement.removeAttribute('data-theme'); }
-        }
-
-        function createMessageElement(text, type = 'bot', isThinking = false, isError = false) {
-             const messageDiv = document.createElement('div');
-             messageDiv.classList.add('message'); // Basisklasse
-             if (isThinking) {
-                 messageDiv.classList.add('thinking-message'); // Keine bot-message hier
-                 const img = document.createElement('img'); img.src = 'loading.gif'; img.alt = 'Loading...'; img.classList.add('loading-gif'); messageDiv.appendChild(img);
-                 const textNode = document.createTextNode('Analyzing your Anki Card...'); messageDiv.appendChild(textNode);
-                 messageDiv.dataset.thinkingId = `thinking-${Date.now()}`;
-             } else if (isError) {
-                 messageDiv.classList.add('bot-message', 'error-message'); // Fehler bekommen Bot-Styling
-                 messageDiv.textContent = text;
-             } else if (type === 'bot') {
-                 messageDiv.classList.add('bot-message'); // Normale Bot-Nachricht
-                 let formattedText = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>'); formattedText = formattedText.replace(/\n/g, '<br>'); messageDiv.innerHTML = formattedText;
-             }
-            return messageDiv;
-        }
-
-        function scrollToBottom() { setTimeout(() => { responseOutput.scrollTop = responseOutput.scrollHeight; }, 50); }
-
-        function generateFollowUpButtons(messageElement) {
-            const buttonArea = document.createElement('div');
-            buttonArea.classList.add('follow-up-buttons');
-            const suggestions = ["Explain further", "Give an example"];
-            suggestions.forEach(suggestion => {
-                const button = document.createElement('button'); button.textContent = suggestion;
-                button.onclick = () => {
-                    const oldButtonAreas = responseOutput.querySelectorAll('.follow-up-buttons'); oldButtonAreas.forEach(area => area.remove());
-                    userInput.value = suggestion; handleSend(userInput);
-                };
-                buttonArea.appendChild(button);
-            });
-            messageElement.appendChild(buttonArea); scrollToBottom();
-        }
-
-        async function handleSend(inputElement) {
-            const inputText = inputElement.value.trim(); if (!inputText) return;
-            const oldButtonAreas = responseOutput.querySelectorAll('.follow-up-buttons'); oldButtonAreas.forEach(area => area.remove());
-            promptInput.disabled = true; goButton.disabled = true; userInput.disabled = true; sendButton.disabled = true; inputElement.value = '';
-            const initialMessage = responseOutput.querySelector('.initial-message'); if (initialMessage && initialMessage.style.display !== 'none') { initialMessage.style.display = 'none'; }
-            const thinkingMsgElement = createMessageElement('', 'bot', true); responseOutput.appendChild(thinkingMsgElement); scrollToBottom();
-
+        // 8. Process the response from OpenRouter
+        // Check for API errors (non-2xx status codes)
+        if (!response.ok) {
+            let errorData;
             try {
-                const response = await fetch(BACKEND_API_URL, {
-                    method: 'POST', headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ userMessage: inputText, chatHistory: chatHistory })
-                });
-                const currentThinkingElement = responseOutput.querySelector(`[data-thinking-id="${thinkingMsgElement.dataset.thinkingId}"]`);
-                if (!response.ok) {
-                    const errorData = await response.json().catch(() => ({ error: `Fehler beim Backend-Aufruf: ${response.statusText}` }));
-                    console.error('Backend/API Error:', response.status, errorData); const errorMessage = `Fehler ${response.status}: ${errorData.error || response.statusText}`;
-                    const errorElement = createMessageElement(errorMessage, 'bot', false, true);
-                    if (currentThinkingElement) { currentThinkingElement.replaceWith(errorElement); } else { responseOutput.appendChild(errorElement); } return;
-                }
-                const data = await response.json();
-                if (data.choices && data.choices.length > 0 && data.choices[0].message) {
-                    const botReply = data.choices[0].message.content; const replyElement = createMessageElement(botReply, 'bot');
-                    chatHistory.push({ role: "user", content: inputText }); chatHistory.push({ role: "assistant", content: botReply });
-                    if (chatHistory.length > MAX_HISTORY_LENGTH) { chatHistory = chatHistory.slice(-MAX_HISTORY_LENGTH); }
-                    if (currentThinkingElement) { currentThinkingElement.replaceWith(replyElement); generateFollowUpButtons(replyElement); }
-                    else { responseOutput.appendChild(replyElement); generateFollowUpButtons(replyElement); }
-                } else if (data.error) {
-                     console.error('Backend returned controlled error:', data.error); const errorElement = createMessageElement(`Backend Fehler: ${data.error}`, 'bot', false, true);
-                     if (currentThinkingElement) { currentThinkingElement.replaceWith(errorElement); } else { responseOutput.appendChild(errorElement); } return;
-                } else { throw new Error('Unerwartete Antwortstruktur vom Backend.'); }
-            } catch (error) {
-                console.error('Fehler bei der Kommunikation mit dem Backend:', error);
-                const currentThinkingElement = responseOutput.querySelector(`[data-thinking-id="${thinkingMsgElement.dataset.thinkingId}"]`);
-                const displayError = `Kommunikationsfehler: ${error.message}`; const errorElement = createMessageElement(displayError, 'bot', false, true);
-                if (currentThinkingElement) { currentThinkingElement.replaceWith(errorElement); } else { responseOutput.appendChild(errorElement); }
-            } finally {
-                promptInput.disabled = false; goButton.disabled = false; userInput.disabled = false; sendButton.disabled = false; userInput.focus(); scrollToBottom();
+                errorData = await response.json(); // Try to get error details from OpenRouter
+            } catch (e) {
+                // If response is not JSON or empty
+                errorData = { error: { message: `OpenRouter API Error: ${response.statusText}` } };
             }
+            console.error('OpenRouter API Error:', response.status, errorData);
+            // Send OpenRouter's status code and a generic message back to frontend
+            return res.status(response.status).json({ error: `API Error: ${errorData?.error?.message || response.statusText}` });
         }
 
-        // --- Initialization ---
-        applySavedTheme();
-        userInput.focus();
+        // Parse the successful JSON response from OpenRouter
+        const data = await response.json();
+        console.log('Received successful response from OpenRouter.');
 
-    </script>
-</body>
-</html>
+        // Basic check if the response format is as expected
+        if (!data.choices || !data.choices[0] || !data.choices[0].message) {
+            console.error('Unexpected response structure from OpenRouter:', data);
+            return res.status(500).json({ error: 'Invalid response format received from AI provider.' });
+        }
+
+        // 9. Send the successful response back to the frontend
+        // The frontend expects the 'data' object which contains 'choices', etc.
+        res.status(200).json(data);
+
+    } catch (error) {
+        // 10. Catch any unexpected errors during backend processing
+        console.error('Internal Server Error in /api/chat:', error);
+        res.status(500).json({ error: 'Internal Server Error.' });
+    }
+}
