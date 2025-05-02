@@ -10,10 +10,11 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 
     <style>
-        /* CSS von test.html (inkl. Variablen, Dark Mode, HTML Highlighting, Logo BG etc.) */
+        /* CSS von der NEUEN Version (test.html / letzte index.html) */
+        /* (Beinhaltet Logo BG, HTML Highlighting Farben etc.) */
         :root {
             --body-bg: #F6F6F6;
-            --prompt-bar-bg: var(--body-bg);
+            --prompt-bar-bg: var(--body-bg); /* Prompt Bar BG auf Body BG */
             --response-bg: #ffffff;
             --text-color: #212529;
             --border-color: #dee2e6;
@@ -27,11 +28,12 @@
             --followup-button-bg: #e9ecef;
             --followup-button-text: #495057;
             --followup-button-border: #ced4da;
+            /* Prompt Bar Buttons - Farblich angepasst an BG */
             --button-go-bg: var(--prompt-bar-bg);
             --button-go-text: var(--prompt-bar-bg);
-             /* Farben für HTML Highlighting (Beispiele, können von AI überschrieben werden) */
-            --highlight-color-term: #005EB8; /* Dunkles Blau */
-            --highlight-bg-concept: #FFFACD; /* Helles Gelb (LemonChiffon) */
+             /* Farben für HTML Highlighting (werden vom JS nicht mehr aktiv genutzt, aber schaden nicht) */
+            --highlight-color-term: #005EB8;
+            --highlight-bg-concept: #FFFACD;
         }
 
         [data-theme="dark"] {
@@ -50,44 +52,69 @@
             --followup-button-border: #6c757d;
             --button-go-bg: var(--prompt-bar-bg);
             --button-go-text: var(--prompt-bar-bg);
-             /* Farben für HTML Highlighting (Dark Mode) */
-             --highlight-color-term: #4dabf7; /* Helleres Blau */
-             --highlight-bg-concept: #696440; /* Dunkleres Gelb */
+            --highlight-color-term: #4dabf7;
+            --highlight-bg-concept: #696440;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: var(--body-bg); color: var(--text-color); display: flex; flex-direction: column; height: 100vh; overflow: hidden; transition: background-color 0.3s, color 0.3s; }
 
-        /* Prompt Bar (visuell minimiert, aber im DOM) */
-        /* ACHTUNG: Extreme Verkleinerung *könnte* JS-Interaktion aus Anki erschweren. */
-        /* Alternative: position: absolute; left: -9999px; */
-        #prompt-bar { display: flex; align-items: center; padding: 1px 5px; background-color: var(--prompt-bar-bg); flex-shrink: 0; height: auto; overflow: hidden; transition: background-color 0.3s; }
-        #prompt-input { flex-grow: 1; padding: 0 2px; font-size: 1px; height: auto; border: 1px solid var(--prompt-bar-bg); border-radius: 3px 0 0 3px; background-color: var(--prompt-bar-bg); color: var(--prompt-bar-bg); border-right: none; outline: none; box-shadow: none; transition: background-color 0.3s, border-color 0.3s, color 0.3s; line-height: 1; }
+        /* Prompt Bar (wie in der alten funktionierenden index(1).html, nur Farben angepasst) */
+        #prompt-bar {
+            display: flex;
+            align-items: center;
+            padding: 5px 10px; /* Standard Padding */
+            background-color: var(--prompt-bar-bg); /* Angepasste Hintergrundfarbe */
+            flex-shrink: 0;
+            transition: background-color 0.3s;
+            /* Alternative zum Verstecken: Positionierung */
+             /* position: absolute; left: -9999px; top: -9999px; */
+        }
+        #prompt-input {
+            flex-grow: 1; padding: 4px 8px; font-size: 0.8em; /* Standard Größe */
+            border: 1px solid var(--prompt-bar-bg); border-radius: 3px 0 0 3px;
+            background-color: var(--prompt-bar-bg); color: var(--prompt-bar-bg); /* Versteckt Inhalt farblich */
+            border-right: none; outline: none; box-shadow: none;
+            transition: background-color 0.3s, border-color 0.3s, color 0.3s;
+        }
         #prompt-input::placeholder { color: var(--prompt-bar-bg); opacity: 1; }
         #prompt-input:focus { border-color: var(--prompt-bar-bg); box-shadow: none; }
-        #go-button { padding: 0 2px; font-size: 1px; height: auto; font-weight: 600; background-color: var(--button-go-bg); color: var(--button-go-text); border: 1px solid var(--prompt-bar-bg); border-left: none; border-radius: 0 3px 3px 0; cursor: pointer; white-space: nowrap; transition: background-color 0.3s, color 0.3s, border-color 0.3s; line-height: 1; }
-        #go-button:hover { opacity: 1; }
-        #prompt-input:disabled, #go-button:disabled { background-color: var(--prompt-bar-bg) !important; color: var(--prompt-bar-bg) !important; border-color: var(--prompt-bar-bg) !important; cursor: not-allowed; opacity: 0.8; }
 
-        /* Hauptbereich */
+        #go-button {
+            padding: 4px 10px; font-size: 0.8em; font-weight: 600; /* Standard Größe */
+            background-color: var(--button-go-bg); color: var(--button-go-text); /* Versteckt Inhalt farblich */
+            border: 1px solid var(--prompt-bar-bg); border-left: none;
+            border-radius: 0 3px 3px 0; cursor: pointer; white-space: nowrap;
+            transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+        }
+        #go-button:hover { opacity: 1; } /* Keine sichtbare Änderung, da Farbe = BG */
+        #prompt-input:disabled, #go-button:disabled {
+            background-color: var(--prompt-bar-bg) !important;
+            color: var(--prompt-bar-bg) !important;
+            border-color: var(--prompt-bar-bg) !important;
+            cursor: not-allowed; opacity: 0.8;
+         }
+
+        /* Hauptbereich (Neues Design mit Logo BG) */
         #response-output { flex-grow: 1; overflow-y: auto; padding: 25px; background-color: var(--body-bg); display: flex; flex-direction: column; transition: background-color 0.3s; background-image: url('logo.png'); background-repeat: no-repeat; background-position: center 70%; background-size: 250px auto; background-attachment: fixed; }
 
-        /* Bot-Nachrichten mit Rand */
-        .message.bot-message { background-color: var(--response-bg); color: var(--text-color); padding: 15px 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); margin-bottom: 20px; max-width: 100%; line-height: 1.6; white-space: normal; transition: background-color 0.3s, color 0.3s, border-color 0.3s; position: relative; z-index: 1; border: 1px solid var(--button-send-bg); }
+        /* Bot-Nachrichten mit Rand (Neues Design) */
+        .message.bot-message { background-color: var(--response-bg); color: var(--text-color); padding: 15px 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); margin-bottom: 20px; max-width: 100%; line-height: 1.6; white-space: pre-wrap; /* Wichtig für <br> aus altem JS */ transition: background-color 0.3s, color 0.3s, border-color 0.3s; position: relative; z-index: 1; border: 1px solid var(--button-send-bg); }
         [data-theme="dark"] .message.bot-message { box-shadow: 0 2px 5px rgba(0,0,0,0.2); border-color: var(--button-send-bg); }
 
-        /* Styling für HTML Elemente *innerhalb* der Bot-Nachricht */
-        .message.bot-message strong { font-weight: 600; }
+        /* Spezifisches Styling für HTML Elemente *innerhalb* der Bot-Nachricht */
+        /* (wird vom alten JS nicht mehr primär genutzt, schadet aber nicht) */
+        .message.bot-message strong { font-weight: 600; } /* Wird von altem JS genutzt */
         .message.bot-message em { font-style: italic; }
         .message.bot-message span[style*="color"] { font-weight: 500; }
         .message.bot-message span[style*="background-color"] { padding: 0.1em 0.3em; border-radius: 3px; }
 
-        /* Initial-Nachricht (vereinfacht) */
+        /* Initial-Nachricht (vereinfachtes Design) */
          .message.initial-message { padding: 25px; text-align: center; border: 1px solid var(--button-send-bg); }
         .start-gif { display: block; margin: 0 auto 25px auto; max-width: var(--start-gif-max-width); height: auto; }
         .initial-message .intro-line { margin-bottom: 0; font-weight: 600; }
 
-        /* Andere Nachrichten-Styles */
+        /* Andere Nachrichten-Styles (aus neuem Design) */
         .thinking-message { text-align: center; font-style: italic; color: var(--placeholder-color); background-color: transparent; box-shadow: none; padding: 10px; margin-bottom: 20px; transition: color 0.3s; position: relative; z-index: 1; border: none; }
         .loading-gif { display: block; height: var(--loading-gif-height); width: auto; margin: 0 auto 10px auto; }
         .error-message { background-color: #f8d7da; color: #842029; font-weight: bold; transition: none; border-color: #f5c6cb; }
@@ -96,7 +123,7 @@
         .follow-up-buttons button { padding: 6px 12px; font-size: 0.9em; border-radius: 15px; border: 1px solid var(--followup-button-border); background-color: var(--followup-button-bg); color: var(--followup-button-text); cursor: pointer; transition: background-color 0.2s, border-color 0.2s; }
         .follow-up-buttons button:hover { opacity: 0.85; }
 
-        /* Input Area & Footer */
+        /* Input Area & Footer (Neues Design mit Darkmode im Footer) */
         #input-area { display: flex; padding: 15px; border-top: 1px solid var(--border-color); background-color: var(--body-bg); flex-shrink: 0; transition: background-color 0.3s, border-color 0.3s; }
         #user-input { flex-grow: 1; padding: 10px 15px; border: 1px solid var(--border-color); border-radius: 20px; margin-right: 10px; background-color: var(--input-bg); color: var(--text-color); font-size: 1em; resize: none; outline: none; transition: background-color 0.3s, color 0.3s, border-color 0.3s; }
         #user-input:focus { border-color: #86b7fe; box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25); }
@@ -119,21 +146,26 @@
     </style>
 </head>
 <body>
-    <!-- HTML Struktur (wie in test.html) -->
-    <div id="prompt-bar">
+    <!-- HTML Struktur (Neues Design) -->
+    <div id="prompt-bar"> <!-- Wird vom JS genutzt, ist aber gestyled wie in der funktionierenden index(1).html -->
         <input type="text" id="prompt-input" placeholder="Automation...">
         <button id="go-button">Go</button>
     </div>
 
+     <!-- Kein Header (#title-bar) in dieser Version, aber Platzhalter falls du ihn wieder willst -->
+     <!-- <header id="title-bar"> ... </header> -->
+
     <main id="response-output">
+        <!-- Vereinfachte Initial-Nachricht (Neues Design) -->
         <div class="message bot-message initial-message">
             <img src="start.gif" alt="Start Guide" class="start-gif">
             <p class="intro-line"> Use the buttons above to start, don't forget to select your preferred language. </p>
+            <!-- Optional: Tutorial-Inhalt hier wieder einfügen, falls gewünscht -->
         </div>
     </main>
 
     <div id="input-area">
-        <input type="text" id="user-input" placeholder="Ask something... (paste image URL if needed)">
+        <input type="text" id="user-input" placeholder="Ask something...">
         <button id="send-button">Send</button>
     </div>
 
@@ -148,30 +180,36 @@
     </footer>
 
     <script>
+        // JAVASCRIPT LOGIK AUS DER ALTEN FUNKTIONIERENDEN index(1).html
+        // (Angepasst für die neuen Element-IDs, falls nötig - waren aber gleich)
+
         // --- DOM Element References ---
         const responseOutput = document.getElementById('response-output');
         const promptInput = document.getElementById('prompt-input');
         const goButton = document.getElementById('go-button');
         const userInput = document.getElementById('user-input');
         const sendButton = document.getElementById('send-button');
-        const darkModeToggle = document.getElementById('darkmode-toggle');
+        const darkModeToggle = document.getElementById('darkmode-toggle'); // Zugeordnet zum neuen Toggle im Footer
 
         // --- CONFIGURATION ---
-        const BACKEND_API_URL = '/api/chat'; // <<< WICHTIG: Ziel ist unser Backend
+        const BACKEND_API_URL = '/api/chat'; // Pfad zur Serverless Function (korrekt)
         const MAX_HISTORY_LENGTH = 10; // Max messages in history
 
         // --- Global State ---
         let chatHistory = [];
-        // System Prompt ist jetzt im Backend! API Key ist auch im Backend!
+        // System Prompt ist im Backend definiert!
 
         // --- Event Listeners ---
+        // Diese sind identisch zur alten Version und sollten direkt funktionieren
         goButton.addEventListener('click', () => handleSend(promptInput));
         promptInput.addEventListener('keypress', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(promptInput); } });
         sendButton.addEventListener('click', () => handleSend(userInput));
         userInput.addEventListener('keypress', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(userInput); } });
+        // Dark Mode Toggle Listener (neu hinzugefügt, da jetzt im Footer)
         darkModeToggle.addEventListener('change', toggleTheme);
 
         // --- Functions ---
+        // Dark Mode Funktionen (neu hinzugefügt/angepasst an neuen Toggle)
         function toggleTheme() {
              if (darkModeToggle.checked) { document.documentElement.setAttribute('data-theme', 'dark'); localStorage.setItem('theme', 'dark'); }
              else { document.documentElement.removeAttribute('data-theme'); localStorage.setItem('theme', 'light'); }
@@ -182,34 +220,36 @@
             else { darkModeToggle.checked = false; document.documentElement.removeAttribute('data-theme'); }
         }
 
-        // createMessageElement verwendet innerHTML für HTML-Rendering
-        function createMessageElement(htmlContent, type = 'bot', isThinking = false, isError = false) {
+        // createMessageElement aus der ALTEN Version (erwartet Markdown)
+        function createMessageElement(text, type = 'bot', isThinking = false, isError = false) {
              const messageDiv = document.createElement('div');
-             messageDiv.classList.add('message');
+             messageDiv.classList.add('message'); // Basisklasse
              if (isThinking) {
-                 messageDiv.classList.add('thinking-message'); // Kein bot-message hier
+                 messageDiv.classList.add('thinking-message'); // Styling aus neuem CSS
                  const img = document.createElement('img'); img.src = 'loading.gif'; img.alt = 'Loading...'; img.classList.add('loading-gif'); messageDiv.appendChild(img);
-                 const textNode = document.createTextNode('Analyzing your input...'); messageDiv.appendChild(textNode);
+                 // Text aus alter Version
+                 const textNode = document.createTextNode('Analyzing your Anki Card...'); messageDiv.appendChild(textNode);
                  messageDiv.dataset.thinkingId = `thinking-${Date.now()}`;
              } else if (isError) {
-                 messageDiv.classList.add('bot-message', 'error-message'); // Fehler bekommen Bot-Styling
-                 messageDiv.textContent = htmlContent; // Fehler sind nur Text
+                 messageDiv.classList.add('bot-message', 'error-message'); // Styling aus neuem CSS
+                 messageDiv.textContent = text; // Fehler ist nur Text
              } else if (type === 'bot') {
-                 messageDiv.classList.add('bot-message'); // Normale Bot-Nachricht
-                 // --- Direkte HTML-Zuweisung ---
-                 // Vorsicht: Nur verwenden, wenn der HTML-Inhalt vom vertrauenswürdigen Backend kommt.
-                 // In diesem Fall kommt es vom Backend nach der AI-Verarbeitung.
-                 messageDiv.innerHTML = htmlContent;
+                 messageDiv.classList.add('bot-message'); // Styling aus neuem CSS
+                 // --- Markdown zu HTML Konvertierung (wie im alten Skript) ---
+                 let formattedText = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>'); // Fett
+                 formattedText = formattedText.replace(/\n/g, '<br>'); // Zeilenumbruch
+                 messageDiv.innerHTML = formattedText; // Setzt das konvertierte HTML
              }
             return messageDiv;
         }
 
+        // scrollToBottom (identisch)
         function scrollToBottom() { setTimeout(() => { responseOutput.scrollTop = responseOutput.scrollHeight; }, 50); }
 
-        // generateFollowUpButtons bleibt gleich
+        // generateFollowUpButtons (identisch)
         function generateFollowUpButtons(messageElement) {
             const buttonArea = document.createElement('div');
-            buttonArea.classList.add('follow-up-buttons');
+            buttonArea.classList.add('follow-up-buttons'); // Styling aus neuem CSS
             const suggestions = ["Explain further", "Give an example"];
             suggestions.forEach(suggestion => {
                 const button = document.createElement('button'); button.textContent = suggestion;
@@ -219,154 +259,153 @@
                 };
                 buttonArea.appendChild(button);
             });
-            // Nur an Elemente anhängen, die nicht 'thinking' oder 'error' sind
-            if (!messageElement.classList.contains('thinking-message') && !messageElement.classList.contains('error-message')) {
-               messageElement.appendChild(buttonArea);
-            }
+             // Nur an Bot-Nachrichten anhängen, die keine Fehler sind
+             if (messageElement.classList.contains('bot-message') && !messageElement.classList.contains('error-message')) {
+                 messageElement.appendChild(buttonArea);
+             }
             scrollToBottom();
         }
 
-        // handleSend ruft jetzt das Backend auf
+        // handleSend aus der ALTEN Version (direkte Logik)
         async function handleSend(inputElement) {
-            const fullInputText = inputElement.value.trim();
-             // Verhindere leere Nachrichten nur vom User-Input, erlaube potenziell leere Auslöser vom Prompt-Input (falls das Addon das macht)
-            if (!fullInputText && inputElement.id === 'user-input') return;
+            const inputText = inputElement.value.trim();
+            // --- WICHTIG: Die alte Logik hat leere Nachrichten vom promptInput erlaubt! ---
+            if (!inputText && inputElement.id === 'user-input') { // Nur User-Input auf leer prüfen
+                 console.log("User input leer, nichts gesendet.");
+                 return;
+            }
 
+            // --- Direktes Verhalten aus der alten Version ---
             const oldButtonAreas = responseOutput.querySelectorAll('.follow-up-buttons');
             oldButtonAreas.forEach(area => area.remove());
-            promptInput.disabled = true; goButton.disabled = true; userInput.disabled = true; sendButton.disabled = true;
 
-            let thinkingMsgElement = null;
-            // Zeige "Thinking" nur für manuellen User-Input an
+            // Alle Eingabefelder deaktivieren
+            promptInput.disabled = true;
+            goButton.disabled = true;
+            userInput.disabled = true;
+            sendButton.disabled = true;
+
+            // Nur User-Input leeren
             if (inputElement.id === 'user-input') {
-                 const initialMessage = responseOutput.querySelector('.initial-message');
-                 if (initialMessage && initialMessage.style.display !== 'none') { initialMessage.style.display = 'none'; }
-                 thinkingMsgElement = createMessageElement('', 'bot', true);
-                 responseOutput.appendChild(thinkingMsgElement);
-                 scrollToBottom();
-            }
-
-            // --- Nachricht für Backend vorbereiten ---
-            let messageToSendToBackend;
-            let textForHistory = fullInputText; // Text, der im Frontend-Verlauf gespeichert wird
-
-            const urlRegex = /(https?:\/\/[^\s]+)/g;
-            const foundUrls = fullInputText.match(urlRegex);
-            let imageUrl = null;
-
-            // Wenn eine URL gefunden wird (nur im User-Input relevant)
-            if (inputElement.id === 'user-input' && foundUrls && foundUrls.length > 0) {
-                imageUrl = foundUrls[0];
-                const textPart = fullInputText.replace(imageUrl, '').trim();
-                textForHistory = `${textPart || 'Analyze Image'} [Image detected]`; // Angepasster Text für Verlauf
-                // Sende ein Objekt an das Backend, das es als multimodal erkennt
-                messageToSendToBackend = {
-                    type: "multimodal",
-                    text: textPart || "Analyze this image.", // Standardtext, wenn kein Text dabei ist
-                    imageUrl: imageUrl
-                };
-                console.log("Sending multimodal request data to backend:", messageToSendToBackend);
+                 inputElement.value = '';
             } else {
-                // Normale Textnachricht (von prompt-input oder user-input ohne URL)
-                messageToSendToBackend = fullInputText; // Einfacher String
-                textForHistory = fullInputText; // Der eingegebene Text
-                console.log("Sending text request data to backend:", messageToSendToBackend);
+                 // Wert im Prompt-Input nicht leeren! Das Addon erwartet ggf., ihn nachzusenden.
+                 console.log("Prompt-Input ausgelöst, Wert bleibt vorerst erhalten.");
             }
 
-            // Leere den Input nur für den User-Input
+
+            // Nur für User-Input die initiale Nachricht ausblenden und Thinking anzeigen
+            let thinkingMsgElement = null; // Wichtig: Nur erstellen, wenn User-Input
             if (inputElement.id === 'user-input') {
-                inputElement.value = '';
+                const initialMessage = responseOutput.querySelector('.initial-message');
+                if (initialMessage && initialMessage.style.display !== 'none') {
+                    initialMessage.style.display = 'none';
+                }
+                thinkingMsgElement = createMessageElement('', 'bot', true);
+                responseOutput.appendChild(thinkingMsgElement);
+                scrollToBottom();
+            } else {
+                 console.log("Prompt-Input ausgelöst, kein 'Thinking...' angezeigt.");
             }
 
             try {
-                // --- Aufruf an das Backend ---
+                // --- Aufruf an das Backend (wie in der alten Version) ---
                 const response = await fetch(BACKEND_API_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        userMessage: messageToSendToBackend, // Kann String oder Objekt sein
+                        userMessage: inputText, // Direkter Text-Input
                         chatHistory: chatHistory
-                    })
+                     })
                 });
 
+                // Thinking-Element finden (nur wenn es für User-Input erstellt wurde)
                 const currentThinkingElement = thinkingMsgElement ? responseOutput.querySelector(`[data-thinking-id="${thinkingMsgElement.dataset.thinkingId}"]`) : null;
 
-                // Fehler vom Backend abfangen
+                // Fehlerbehandlung (wie in der alten Version)
                 if (!response.ok) {
-                    let errorMessage = `Backend Fehler ${response.status}: ${response.statusText}`;
+                    let errorData;
                     try {
-                         const errorData = await response.json();
-                         errorMessage = `Backend Fehler ${response.status}: ${errorData.error || response.statusText}`;
-                    } catch (e) { /* Nichts tun, wenn die Fehlerantwort kein JSON ist */ }
-
-                    console.error('Backend Error:', errorMessage);
-                    const errorElement = createMessageElement(errorMessage, 'bot', false, true);
-                    if (currentThinkingElement) { currentThinkingElement.replaceWith(errorElement); }
-                    else {
-                        // Wenn Fehler bei Prompt-Bar auftritt, vielleicht im normalen Chat anzeigen?
-                         console.error("Error during hidden prompt, displaying in chat:", errorMessage);
-                         responseOutput.appendChild(errorElement); // Fehler sichtbar machen
+                         errorData = await response.json();
+                    } catch {
+                        errorData = { error: `Fehler beim Backend-Aufruf: ${response.statusText}` };
                     }
-                    return; // Frühzeitiger Ausstieg
+                    console.error('Backend/API Error:', response.status, errorData);
+                    const errorMessage = `Fehler ${response.status}: ${errorData.error || response.statusText}`;
+                    const errorElement = createMessageElement(errorMessage, 'bot', false, true);
+
+                    if (currentThinkingElement) {
+                        currentThinkingElement.replaceWith(errorElement);
+                    } else {
+                        // Wenn Fehler bei Prompt-Bar auftritt, im Chat anzeigen
+                        responseOutput.appendChild(errorElement);
+                    }
+                    return; // Frühzeitiger Ausstieg bei Fehler
                 }
 
-                // Erfolgreiche Antwort vom Backend
-                const data = await response.json(); // Backend sendet die Struktur von OpenRouter weiter
+                // Erfolgreiche Antwort (wie in der alten Version)
+                const data = await response.json();
 
-                // Antwort verarbeiten (sollte HTML sein)
-                if (data.choices && data.choices.length > 0 && data.choices[0].message && data.choices[0].message.content) {
-                    const botReplyHtml = data.choices[0].message.content; // HTML vom Backend
+                // Antwort verarbeiten (erwartet Markdown)
+                if (data.choices && data.choices.length > 0 && data.choices[0].message) {
+                    const botReply = data.choices[0].message.content; // Sollte Markdown sein
+                    const replyElement = createMessageElement(botReply, 'bot'); // Wandelt Markdown um
 
-                    // Verlauf aktualisieren (speichere den ursprünglichen Text und die HTML-Antwort)
-                    // Stelle sicher, dass auch leere Nachrichten vom Prompt-Input im Verlauf landen, wenn sie gesendet wurden
-                    if (textForHistory || inputElement.id === 'prompt-input') {
-                       chatHistory.push({ role: "user", content: textForHistory });
-                       chatHistory.push({ role: "assistant", content: botReplyHtml }); // HTML im Verlauf speichern
-                       if (chatHistory.length > MAX_HISTORY_LENGTH) { chatHistory = chatHistory.slice(-MAX_HISTORY_LENGTH); }
-                    }
+                    // Verlauf aktualisieren (User-Input + Bot-Antwort)
+                    // Wichtig: Füge auch den (potenziell leeren) Prompt-Input hinzu, wenn er gesendet wurde
+                     chatHistory.push({ role: "user", content: inputText });
+                     chatHistory.push({ role: "assistant", content: botReply }); // Markdown im Verlauf speichern? Oder konvertiert? Altes Skript unklar. Sicherer ist Markdown.
+                     if (chatHistory.length > MAX_HISTORY_LENGTH) {
+                         chatHistory = chatHistory.slice(-MAX_HISTORY_LENGTH);
+                     }
 
-
-                    // HTML im Chat anzeigen (nur wenn es eine sichtbare Interaktion war)
+                    // Antwort anzeigen (nur wenn Thinking-Element da war, also User-Input)
                     if (currentThinkingElement) {
-                         const replyElement = createMessageElement(botReplyHtml, 'bot'); // Rendert HTML
                          currentThinkingElement.replaceWith(replyElement);
                          generateFollowUpButtons(replyElement); // Füge Follow-up Buttons hinzu
-                     } else {
-                         // Antwort auf Prompt-Bar Anfrage (wird nicht direkt angezeigt, aber geloggt & im Verlauf gespeichert)
-                         console.log("Received hidden prompt response (HTML stored in history):", botReplyHtml.substring(0, 100) + "...");
-                     }
-                } else if (data.error) { // Falls das Backend einen kontrollierten Fehler sendet
+                    } else {
+                         // Antwort auf Prompt-Bar Anfrage nicht direkt anzeigen, nur im Verlauf speichern.
+                         console.log("Antwort auf Prompt-Bar Anfrage erhalten und im Verlauf gespeichert.");
+                         // Man könnte sie hier optional doch anzeigen, wenn gewünscht:
+                         // responseOutput.appendChild(replyElement);
+                         // generateFollowUpButtons(replyElement);
+                         // scrollToBottom();
+                    }
+                } else if (data.error) { // Kontrollierter Fehler vom Backend
                      console.error('Backend returned controlled error:', data.error);
                      const errorElement = createMessageElement(`Backend Fehler: ${data.error}`, 'bot', false, true);
                      if (currentThinkingElement) { currentThinkingElement.replaceWith(errorElement); }
-                     else { responseOutput.appendChild(errorElement); } // Fehler sichtbar machen
+                     else { responseOutput.appendChild(errorElement); }
                      return;
-                 } else {
-                     // Unerwartete Antwortstruktur
-                     throw new Error('Unerwartete Antwortstruktur vom Backend.');
-                 }
-
+                } else {
+                    throw new Error('Unerwartete Antwortstruktur vom Backend.');
+                }
             } catch (error) {
-                // Genereller Kommunikationsfehler mit dem Backend
+                // Genereller Kommunikationsfehler
                 console.error('Fehler bei der Kommunikation mit dem Backend:', error);
                 const currentThinkingElement = thinkingMsgElement ? responseOutput.querySelector(`[data-thinking-id="${thinkingMsgElement.dataset.thinkingId}"]`) : null;
                 const displayError = `Kommunikationsfehler: ${error.message}`;
                 const errorElement = createMessageElement(displayError, 'bot', false, true);
                  if (currentThinkingElement) { currentThinkingElement.replaceWith(errorElement); }
-                 else { responseOutput.appendChild(errorElement); } // Fehler sichtbar machen
+                 else { responseOutput.appendChild(errorElement); }
             } finally {
                 // Buttons wieder aktivieren
-                promptInput.disabled = false; goButton.disabled = false; userInput.disabled = false; sendButton.disabled = false;
-                // Fokus auf User-Input setzen, wenn es die letzte Interaktion war
-                if (inputElement.id === 'user-input') { userInput.focus(); }
+                promptInput.disabled = false;
+                goButton.disabled = false;
+                userInput.disabled = false;
+                sendButton.disabled = false;
+
+                // Fokus nur auf User-Input setzen
+                if (inputElement.id === 'user-input') {
+                     userInput.focus();
+                }
                 scrollToBottom(); // Sicherstellen, dass alles sichtbar ist
             }
         }
 
-
         // --- Initialization ---
-        applySavedTheme();
-        userInput.focus(); // Standardmäßig Fokus auf das manuelle Inputfeld
+        applySavedTheme(); // Für Dark Mode
+        userInput.focus(); // Standardfokus
 
     </script>
 </body>
