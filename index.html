@@ -12,16 +12,12 @@
     <style>
         /* --- BASE VARIABLES (Light Mode) --- */
         :root {
-            /* REMOVED --header-bar-bg and --header-text as title bar is gone */
-            --body-bg: #F6F6F6; /* UPDATED Background */
-            /* --prompt-bar-bg: var(--header-bar-bg); /* REMOVED - Now hardcoded gray */
+            --body-bg: #F6F6F6;
             --response-bg: #ffffff;
             --text-color: #212529;
             --border-color: #dee2e6;
             --input-bg: #ffffff;
             --placeholder-color: #6c757d;
-            /* --button-go-bg: #f8f9fa; /* Not needed directly anymore */
-            /* --button-go-text: #343a40; /* Not needed directly anymore */
             --button-send-bg: #0071D3;
             --button-send-text: #ffffff;
             --footer-text: #6c757d;
@@ -30,27 +26,26 @@
             --followup-button-bg: #e9ecef;
             --followup-button-text: #495057;
             --followup-button-border: #ced4da;
-            --bot-message-border-color: #0071D3; /* ADDED Border color variable */
+            --bot-message-border-color: #0071D3;
+            --hidden-color: #F6F6F6; /* ADDED Variable for the hidden color */
         }
 
         /* --- DARK MODE Variables --- */
         [data-theme="dark"] {
-            /* REMOVED --header-bar-bg and --header-text */
-            --body-bg: #212529; /* Dark background remains dark */
+            --body-bg: #212529;
             --response-bg: #343a40;
             --text-color: #f8f9fa;
             --border-color: #495057;
             --input-bg: #495057;
             --placeholder-color: #adb5bd;
-            --button-send-bg: #005eb8; /* Adjusted blue for dark */
+            --button-send-bg: #005eb8;
             --button-send-text: #ffffff;
             --footer-text: #adb5bd;
             --followup-button-bg: #495057;
             --followup-button-text: #f8f9fa;
             --followup-button-border: #6c757d;
-            --bot-message-border-color: #0071D3; /* Keep border blue in dark mode too, as requested */
-            /* Input area border needs adjustment for dark */
-            /* Prompt bar elements need dark mode colors */
+            --bot-message-border-color: #0071D3;
+            /* --hidden-color remains #F6F6F6 as requested, even in dark mode */
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -62,7 +57,7 @@
             display: flex;
             flex-direction: column;
             height: 100vh;
-            overflow: hidden; /* Verhindert Scrollen des Body */
+            overflow: hidden;
             transition: background-color 0.3s, color 0.3s;
         }
 
@@ -71,62 +66,63 @@
             display: flex;
             align-items: center;
             padding: 5px 10px;
-            background-color: #F6F6F6; /* UPDATED Color */
-            border-bottom: 1px solid #e0e0e0; /* Add slight border for separation */
+            background-color: var(--hidden-color); /* UPDATED Color */
+            border-bottom: none; /* REMOVED Border */
             flex-shrink: 0;
-            transition: background-color 0.3s, border-color 0.3s;
+            transition: none; /* No transition needed if always same color */
         }
         #prompt-input {
             flex-grow: 1; padding: 4px 8px; font-size: 0.8em;
-            border: 1px solid #dcdcdc; /* UPDATED Border Color */
+            border: 1px solid var(--hidden-color); /* UPDATED Border Color */
             border-radius: 3px 0 0 3px;
-            background-color: #ffffff; /* UPDATED Background (White looks better) */
-            color: #333333; /* UPDATED Text Color (Visible) */
+            background-color: var(--hidden-color); /* UPDATED Background */
+            color: var(--hidden-color); /* UPDATED Text Color (Hidden) */
             border-right: none; outline: none; box-shadow: none;
-            transition: background-color 0.3s, border-color 0.3s, color 0.3s;
+            transition: none; /* No transition */
         }
-        #prompt-input::placeholder { color: #aaaaaa; opacity: 1; } /* UPDATED Placeholder Color */
+        #prompt-input::placeholder { color: var(--hidden-color); opacity: 1; } /* UPDATED Placeholder Color */
         #prompt-input:focus {
-            border-color: #aaaaaa; /* Adjust focus color */
+            border-color: var(--hidden-color); /* UPDATED Focus Border */
             box-shadow: none;
         }
         #go-button {
             padding: 4px 10px; font-size: 0.8em; font-weight: 600;
-            background-color: #eeeeee; /* UPDATED Background (Slightly darker gray) */
-            color: #333333; /* UPDATED Text Color (Visible) */
-            border: 1px solid #dcdcdc; /* UPDATED Border Color */
+            background-color: var(--hidden-color); /* UPDATED Background */
+            color: var(--hidden-color); /* UPDATED Text Color (Hidden) */
+            border: 1px solid var(--hidden-color); /* UPDATED Border Color */
             border-left: none;
             border-radius: 0 3px 3px 0; cursor: pointer; white-space: nowrap;
-            transition: background-color 0.2s, color 0.2s, border-color 0.2s;
+            transition: none; /* No transition */
         }
-        #go-button:hover { background-color: #dddddd; } /* UPDATED Hover */
+        #go-button:hover {
+            background-color: var(--hidden-color); /* UPDATED Hover BG */
+            opacity: 1; /* Ensure hover doesn't reveal */
+        }
         #prompt-input:disabled, #go-button:disabled {
-            background-color: #f0f0f0 !important; /* UPDATED Disabled BG */
-            color: #aaaaaa !important; /* UPDATED Disabled Text */
-            border-color: #e0e0e0 !important; /* UPDATED Disabled Border */
-            cursor: not-allowed; opacity: 0.8;
+            background-color: var(--hidden-color) !important; /* UPDATED Disabled BG */
+            color: var(--hidden-color) !important; /* UPDATED Disabled Text */
+            border-color: var(--hidden-color) !important; /* UPDATED Disabled Border */
+            cursor: not-allowed;
+            opacity: 1; /* Ensure disabled doesn't reveal */
          }
-         /* Dark mode specific for prompt bar */
-        [data-theme="dark"] #prompt-bar { background-color: #2a2e33; border-bottom-color: #40454a; }
-        [data-theme="dark"] #prompt-input { background-color: #3a3f44; border-color: #50555a; color: #e0e0e0; }
-        [data-theme="dark"] #prompt-input::placeholder { color: #888888; }
-        [data-theme="dark"] #go-button { background-color: #4a4f54; border-color: #50555a; color: #e0e0e0; }
-        [data-theme="dark"] #go-button:hover { background-color: #5a5f64; }
+         /* Dark mode specific for prompt bar - OVERRIDDEN TO BE HIDDEN */
+        [data-theme="dark"] #prompt-bar { background-color: var(--hidden-color); border-bottom: none; }
+        [data-theme="dark"] #prompt-input { background-color: var(--hidden-color); border-color: var(--hidden-color); color: var(--hidden-color); }
+        [data-theme="dark"] #prompt-input::placeholder { color: var(--hidden-color); }
+        [data-theme="dark"] #go-button { background-color: var(--hidden-color); border-color: var(--hidden-color); color: var(--hidden-color); }
+        [data-theme="dark"] #go-button:hover { background-color: var(--hidden-color); }
         [data-theme="dark"] #prompt-input:disabled, [data-theme="dark"] #go-button:disabled {
-            background-color: #303438 !important; color: #777777 !important; border-color: #40454a !important;
+            background-color: var(--hidden-color) !important; color: var(--hidden-color) !important; border-color: var(--hidden-color) !important;
         }
 
-
-        /* Blaue Titel-Leiste - REMOVED */
-        /* #title-bar { ... } */
-        /* .header-left { ... } etc. */
 
         /* Hauptbereich für Antworten */
         #response-output {
             flex-grow: 1;
             overflow-y: auto;
-            padding: 25px;
-            background-color: var(--body-bg); /* Uses the new #F6F6F6 in light mode */
+            /* padding: 25px; */ /* Original padding */
+            padding: 5px 25px 25px 25px; /* MODIFIED: Reduced top padding significantly */
+            background-color: var(--body-bg);
             display: flex;
             flex-direction: column;
             transition: background-color 0.3s;
@@ -138,36 +134,33 @@
             padding: 15px 20px; border-radius: 8px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.05); margin-bottom: 20px;
             max-width: 100%; line-height: 1.6; white-space: pre-wrap;
-            border: 1px solid var(--bot-message-border-color); /* ADDED Blue Border */
+            border: 1px solid var(--bot-message-border-color);
             transition: background-color 0.3s, color 0.3s, border-color 0.3s;
         }
         [data-theme="dark"] .message.bot-message { box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
         .message strong, .message b { font-weight: 600; }
 
         /* Spezifisches Styling für die initiale Nachricht */
-        .message.initial-message { /* inherits bot-message styles including border */
+        .message.initial-message {
             padding: 25px;
-            text-align: center; /* Center the remaining content */
-             /* Other styles inherited from .bot-message */
+            text-align: center;
         }
         .start-gif {
              display: block; margin: 0 auto 25px auto;
              max-width: var(--start-gif-max-width); height: auto;
         }
         .initial-message .intro-line {
-             /* Removed centering here, handled by initial-message text-align */
-             margin-bottom: 0; /* Remove bottom margin */
-             font-weight: 400; /* Make it less prominent than headings were */
+             margin-bottom: 0;
+             font-weight: 400;
              font-size: 0.95em;
-             color: var(--text-color); /* Ensure visibility */
+             color: var(--text-color);
              opacity: 0.9;
          }
-         /* Removed .instructions-heading and related paragraph styling */
 
         /* Thinking/Loading Styling */
         .thinking-message {
             text-align: center; font-style: italic; color: var(--placeholder-color);
-            background-color: transparent; box-shadow: none; border: none; /* No border for thinking */
+            background-color: transparent; box-shadow: none; border: none;
             padding: 10px; margin-bottom: 20px; transition: color 0.3s;
         }
         .loading-gif {
@@ -178,7 +171,7 @@
         .error-message {
             background-color: #f8d7da; color: #842029;
             font-weight: bold; transition: none;
-            border: 1px solid #f5c2c7; /* Add specific border for error */
+            border: 1px solid #f5c2c7;
         }
         [data-theme="dark"] .error-message {
              background-color: #842029; color: #f8d7da; border: 1px solid #8f2b36;
@@ -202,7 +195,7 @@
         /* Untere Chat-Eingabe (für Nutzer) */
         #input-area {
             display: flex; padding: 15px; border-top: 1px solid var(--border-color);
-            background-color: var(--body-bg); flex-shrink: 0; /* Uses new #F6F6F6 in light */
+            background-color: var(--body-bg); flex-shrink: 0;
             transition: background-color 0.3s, border-color 0.3s;
         }
         #user-input {
@@ -230,25 +223,25 @@
         /* Footer Disclaimer */
         #footer-disclaimer {
             padding: 10px 20px;
-            display: flex; /* ADDED for layout */
-            justify-content: space-between; /* ADDED for layout */
-            align-items: center; /* ADDED for layout */
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             font-size: 0.75em;
             color: var(--footer-text);
-            background-color: var(--body-bg); /* Uses new #F6F6F6 in light */
+            background-color: var(--body-bg);
             flex-shrink: 0;
             border-top: 1px solid var(--border-color);
             transition: background-color 0.3s, color 0.3s, border-color 0.3s;
         }
         /* Styles for moved dark mode toggle */
-        .darkmode-label { margin-right: 5px; font-size: 0.9em; /* Adjusted size slightly */ }
-        .switch { position: relative; display: inline-block; width: 34px; height: 20px; vertical-align: middle; /* Adjusted size */ }
+        .darkmode-label { margin-right: 5px; font-size: 0.9em; }
+        .switch { position: relative; display: inline-block; width: 34px; height: 20px; vertical-align: middle; }
         .switch input { display:none; }
-        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 20px; /* Adjusted radius */ }
-        .slider:before { position: absolute; content: ""; height: 14px; width: 14px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; /* Adjusted size */ }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 20px; }
+        .slider:before { position: absolute; content: ""; height: 14px; width: 14px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
         input:checked + .slider { background-color: #0071D3; }
         [data-theme="dark"] input:checked + .slider { background-color: #2196F3; }
-        input:checked + .slider:before { transform: translateX(14px); /* Adjusted transform */ }
+        input:checked + .slider:before { transform: translateX(14px); }
         /* Container for the toggle elements in the footer */
         .footer-toggle-container {
              display: flex;
@@ -258,36 +251,31 @@
     </style>
 </head>
 <body>
-    <!-- Top Prompt Bar (Stays) -->
+    <!-- Top Prompt Bar (Visually Hidden) -->
     <div id="prompt-bar">
         <input type="text" id="prompt-input" placeholder="Automation...">
         <button id="go-button">Go</button>
     </div>
 
-    <!-- Title Bar - REMOVED -->
-    <!-- <header id="title-bar"> ... </header> -->
-
     <!-- Main Content Area -->
     <main id="response-output">
-        <!-- Initial Message - MODIFIED -->
+        <!-- Initial Message -->
         <div class="message bot-message initial-message">
             <img src="start.gif" alt="Start Guide" class="start-gif">
             <p class="intro-line"> Use the buttons above to start, don't forget to select your preferred language. </p>
-            <!-- Instructions Content Removed -->
         </div>
         <!-- Dynamic messages will be added here -->
     </main>
 
-    <!-- User Input Area (Stays) -->
+    <!-- User Input Area -->
     <div id="input-area">
         <input type="text" id="user-input" placeholder="Ask something...">
         <button id="send-button">Send</button>
     </div>
 
-    <!-- Footer Disclaimer - MODIFIED -->
+    <!-- Footer Disclaimer -->
     <footer id="footer-disclaimer">
         <span>The Synapse Pro AI can make mistakes. Please check important Information.</span>
-        <!-- Dark Mode Toggle Moved Here -->
         <div class="footer-toggle-container">
             <span class="darkmode-label">Darkmode</span>
             <label class="switch">
@@ -298,8 +286,7 @@
     </footer>
 
     <script>
-        // JAVASCRIPT LOGIC BLEIBT EXAKT GLEICH WIE IN DER VORHERIGEN ANTWORT
-        // (Mit Backend-Aufruf, Kontexterhaltung, Follow-up Buttons etc.)
+        // JAVASCRIPT LOGIC REMAINS UNCHANGED FROM PREVIOUS VERSION
 
         // --- DOM Element References ---
         const responseOutput = document.getElementById('response-output');
@@ -348,9 +335,8 @@
                  messageDiv.textContent = text;
              } else if (type === 'bot') {
                  // Handle initial message differently - no text formatting needed here now
-                 if (text === 'INITIAL') { // Check for a specific signal maybe? Or rely on CSS class.
-                    // If we need special handling for the *initial* message content beyond CSS:
-                    // messageDiv.classList.add('initial-message'); // Class is already added in HTML
+                 if (messageDiv.classList.contains('initial-message')) {
+                     // Already handled by HTML structure
                  } else {
                     messageDiv.classList.add('bot-message'); // Normale Bot-Nachricht
                     // Apply formatting only to actual bot replies
@@ -359,23 +345,18 @@
                     messageDiv.innerHTML = formattedText;
                  }
              }
-            // Ensure initial message doesn't get processed like a regular bot reply if needed later
-            if (messageDiv.classList.contains('initial-message')) {
-                // Special handling if the initial message content was dynamic
-            }
             return messageDiv;
         }
 
         function scrollToBottom() { setTimeout(() => { responseOutput.scrollTop = responseOutput.scrollHeight; }, 50); }
 
         function generateFollowUpButtons(messageElement) {
-            // Don't add follow-up buttons to error messages or the initial message
             if (messageElement.classList.contains('error-message') || messageElement.classList.contains('initial-message')) {
                 return;
             }
             const buttonArea = document.createElement('div');
             buttonArea.classList.add('follow-up-buttons');
-            const suggestions = ["Explain further", "Give an example"]; // Keep suggestions simple
+            const suggestions = ["Explain further", "Give an example"];
             suggestions.forEach(suggestion => {
                 const button = document.createElement('button'); button.textContent = suggestion;
                 button.onclick = () => {
@@ -392,7 +373,6 @@
             const oldButtonAreas = responseOutput.querySelectorAll('.follow-up-buttons'); oldButtonAreas.forEach(area => area.remove());
             promptInput.disabled = true; goButton.disabled = true; userInput.disabled = true; sendButton.disabled = true; inputElement.value = '';
 
-            // Hide initial message if it's still visible
             const initialMessage = responseOutput.querySelector('.initial-message');
             if (initialMessage && initialMessage.style.display !== 'none') {
                  initialMessage.style.display = 'none';
@@ -414,7 +394,7 @@
                 }
                 const data = await response.json();
                 if (data.choices && data.choices.length > 0 && data.choices[0].message) {
-                    const botReply = data.choices[0].message.content; const replyElement = createMessageElement(botReply, 'bot'); // Pass 'bot' type
+                    const botReply = data.choices[0].message.content; const replyElement = createMessageElement(botReply, 'bot');
                     chatHistory.push({ role: "user", content: inputText }); chatHistory.push({ role: "assistant", content: botReply });
                     if (chatHistory.length > MAX_HISTORY_LENGTH) { chatHistory = chatHistory.slice(-MAX_HISTORY_LENGTH); }
                     if (currentThinkingElement) { currentThinkingElement.replaceWith(replyElement); generateFollowUpButtons(replyElement); }
