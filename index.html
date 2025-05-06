@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Synapse Pro - Chat</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        /* --- BASE VARIABLES (Light Mode) --- */
+        :root {
+            --body-bg: #F6F6F6;
+            --response-bg: #ffffff;
+            --text-color: #212529;
+            --border-color: #dee2e6;
+            --input-bg: #ffffff;
+            --placeholder-color: #6c757d;
+            --button-send-bg: #0071D3;
+            --button-send-text: #ffffff;
+            --button-primary-bg: #007bff;
+            --button-primary-text: #ffffff;
+            --footer-text: #6c757d;
+            --loading-gif-height: 60px;
+            --start-gif-max-width: 100px;
+            --followup-button-bg: #e9ecef;
+            --followup-button-text: #495057;
+            --followup-button-border: #ced4da;
+            --bot-message-border-color: #0071D3;
+            --hidden-color: #F6F6F6;
+            --highlight-color-term: #005EB8;
+            --highlight-color-concept: #28a745;
+        }
+
+        /* --- DARK MODE Variables --- */
+        [data-theme="dark"] {
+            --body-bg: #212529;
+            --response-bg: #343a40;
+            --text-color: #f8f9fa;
+            --border-color: #495057;
+            --input-bg: #495057;
+            --placeholder-color: #adb5bd;
+            --button-send-bg: #005eb8;
+            --button-send-text: #ffffff;
+            --button-primary-bg: #0056b3;
+            --button-primary-text: #ffffff;
+            --footer-text: #adb5bd;
+            --followup-button-bg: #495057;
+            --followup-button-text: #f8f9fa;
+            --followup-button-border: #6c757d;
+            --bot-message-border-color: #0071D3;
+            --highlight-color-term: #66bfff;
+            --highlight-color-concept: #52c41a;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--body-bg);
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        /* Profile Area */
+        #profile-area {
+            padding: 10px 15px;
+            background-color: var(--response-bg);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.9em;
+            flex-shrink: 0;
+        }
+        #user-info { display: none; align-items: center; gap: 10px; }
+        #auth-section { display: flex; gap: 10px; }
+        #profile-area button, .buy-credits-button { /* General style for buttons in profile area */
+            padding: 8px 12px;
+            font-size: 0.9em;
+            background-color: var(--button-primary-bg);
+            color: var(--button-primary-text);
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        #profile-area button:hover, .buy-credits-button:hover { opacity: 0.85; }
+        #credit-counter { font-weight: bold; }
+        #trial-status { font-style: italic; font-size: 0.9em; }
+        #buy-credits-options { display: none; gap: 8px; margin-left: 10px; }
+
+
+        /* Login Modal */
+        .modal {
+            display: none; position: fixed; z-index: 1000; left: 0; top: 0;
+            width: 100%; height: 100%; background-color: rgba(0,0,0,0.5);
+            align-items: center; justify-content: center;
+        }
+        .modal-content {
+            background-color: var(--response-bg); padding: 25px;
+            border-radius: 8px; width: 90%; max-width: 400px;
+            text-align: center; box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        .modal-content h3 { margin-bottom: 15px; }
+        .modal-content input[type="email"], .modal-content input[type="password"] {
+            width: calc(100% - 20px); padding: 10px; margin-bottom: 15px;
+            border: 1px solid var(--border-color); border-radius: 5px;
+            background-color: var(--input-bg); color: var(--text-color); font-size: 1em;
+        }
+        .modal-content button {
+            padding: 10px 15px; font-size: 1em; width: 100%;
+            background-color: var(--button-send-bg); color: var(--button-send-text);
+            border: none; border-radius: 5px; cursor: pointer; margin-top: 5px;
+        }
+        .modal-content button:hover { opacity: 0.9; }
+        #google-signin-button { background-color: #DB4437 !important; }
+        .close-modal {
+            position: absolute; top: 10px; right: 15px;
+            font-size: 24px; font-weight: bold; color: var(--placeholder-color);
+            cursor: pointer; border: none; background: none;
+        }
+        #auth-error { color: #dc3545; font-size: 0.85em; margin-top: 10px; min-height: 1.2em; }
+        #modal-switch-link { color: var(--button-send-bg); text-decoration: underline; cursor: pointer; font-weight: normal; }
+
+        /* Your existing styles for chat area */
+        #prompt-bar { display: none !important; } /* Hidden as per your original full code intent */
+        #response-output { flex-grow: 1; overflow-y: auto; padding: 10px 20px; background-color: var(--body-bg); display: flex; flex-direction: column; }
+        .message.bot-message { background-color: var(--response-bg); color: var(--text-color); padding: 12px 18px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); margin-bottom: 15px; max-width: 95%; line-height: 1.5; white-space: pre-wrap; border: 1px solid var(--bot-message-border-color); }
+        .message.bot-message > *:first-child { margin-top: 0; }
+        .message.bot-message > *:last-child { margin-bottom: 0; }
+        .message.initial-message { padding: 20px; text-align: center; border: none; box-shadow: none; background-color: transparent; }
+        .start-gif { display: block; margin: 0 auto 20px auto; max-width: var(--start-gif-max-width); height: auto; }
+        .initial-message .intro-line { margin-bottom: 0; font-weight: 400; font-size: 1em; color: var(--text-color); opacity: 0.8; }
+        .thinking-message { text-align: center; font-style: italic; color: var(--placeholder-color); background-color: transparent; box-shadow: none; border: none; padding: 10px; margin-bottom: 15px; }
+        .loading-gif { display: block; height: var(--loading-gif-height); width: auto; margin: 0 auto 8px auto; }
+        .error-message { background-color: #f8d7da !important; color: #842029 !important; border: 1px solid #f5c2c7 !important; }
+        [data-theme="dark"] .error-message { background-color: #842029 !important; color: #f8d7da !important; border: 1px solid #8f2b36 !important; }
+        .follow-up-buttons { margin-top: 12px; padding-top: 8px; border-top: 1px dashed var(--border-color); display: flex; gap: 8px; flex-wrap: wrap; }
+        .follow-up-buttons button { padding: 5px 10px; font-size: 0.85em; border-radius: 15px; border: 1px solid var(--followup-button-border); background-color: var(--followup-button-bg); color: var(--followup-button-text); cursor: pointer; }
+        .follow-up-buttons button:hover { opacity: 0.85; }
+
+        #input-area { display: flex; padding: 10px 15px; border-top: 1px solid var(--border-color); background-color: var(--response-bg); flex-shrink: 0; }
+        #user-input { flex-grow: 1; padding: 10px 12px; border: 1px solid var(--border-color); border-radius: 18px; margin-right: 8px; background-color: var(--input-bg); color: var(--text-color); font-size: 0.95em; resize: none; outline: none; }
+        #user-input:focus { border-color: #86b7fe; box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.2); }
+        [data-theme="dark"] #user-input:focus { border-color: #4dabf7; box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25); }
+        #send-button { padding: 10px 18px; background-color: var(--button-send-bg); color: var(--button-send-text); border: none; border-radius: 18px; cursor: pointer; font-size: 0.95em; font-weight: 600; }
+        #send-button:hover { opacity: 0.9; }
+        #send-button:disabled { background-color: #6c757d; cursor: not-allowed; }
+        [data-theme="dark"] #send-button:disabled { background-color: #495057; }
+
+        #footer-disclaimer { padding: 8px 15px; display: flex; justify-content: space-between; align-items: center; font-size: 0.7em; color: var(--footer-text); background-color: var(--body-bg); flex-shrink: 0; border-top: 1px solid var(--border-color); }
+        .darkmode-label { margin-right: 5px; font-size: 0.9em; }
+        .switch { position: relative; display: inline-block; width: 34px; height: 20px; vertical-align: middle; }
+        .switch input { display:none; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 20px; }
+        .slider:before { position: absolute; content: ""; height: 14px; width: 14px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: var(--button-send-bg); } /* Use theme color */
+        input:checked + .slider:before { transform: translateX(14px); }
+        .footer-toggle-container { display: flex; align-items: center; }
+    </style>
+</head>
+<body>
+    <div id="profile-area">
+        <div id="user-info">
+            <span id="user-email"></span>
+            <span id="credit-counter">Credits: -</span>
+            <span id="trial-status">Trial: -</span>
+            <div id="buy-credits-options">
+                <!-- JS will populate these -->
+            </div>
+        </div>
+        <div id="auth-section">
+            <button id="login-button">Login / Sign Up</button>
+            <button id="logout-button" style="display:none;">Logout</button>
+        </div>
+    </div>
+
+    <div id="auth-modal" class="modal">
+        <div class="modal-content">
+            <button class="close-modal" onclick="closeAuthModal()">×</button>
+            <h3 id="modal-title">Login</h3>
+            <input type="email" id="auth-email" placeholder="Email" autocomplete="email">
+            <input type="password" id="auth-password" placeholder="Password" autocomplete="current-password">
+            <button id="auth-action-button">Login</button>
+            <p id="auth-error"></p>
+            <p style="margin-top:15px; font-size: 0.9em;">
+                <span id="modal-switch-text">Don't have an account?</span>
+                <a href="#" id="modal-switch-link" onclick="toggleAuthMode(event)">Sign Up</a>
+            </p>
+            <button id="google-signin-button">Sign in with Google</button>
+        </div>
+    </div>
+
+    <main id="response-output">
+        <div class="message bot-message initial-message">
+            <img src="public/start.gif" alt="Start Guide" class="start-gif"> <!-- Adjusted path -->
+            <p class="intro-line">Please log in or sign up to use Synapse Pro.</p>
+        </div>
+    </main>
+
+    <div id="input-area" style="display:none;">
+        <input type="text" id="user-input" placeholder="Ask something...">
+        <button id="send-button">Send</button>
+    </div>
+
+    <footer id="footer-disclaimer">
+        <span>The Synapse Pro AI can make mistakes. Please check important Information.</span>
+        <div class="footer-toggle-container">
+            <span class="darkmode-label">Darkmode</span>
+            <label class="switch">
+                <input type="checkbox" id="darkmode-toggle">
+                <span class="slider round"></span>
+            </label>
+        </div>
+    </footer>
+
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
+
+    <script>
+        console.log("Script starting...");
+
+        // --- DOM Element References ---
+        const dom = {
+            responseOutput: document.getElementById('response-output'),
+            userInput: document.getElementById('user-input'),
+            sendButton: document.getElementById('send-button'),
+            darkModeToggle: document.getElementById('darkmode-toggle'),
+            inputArea: document.getElementById('input-area'),
+            initialMessageDiv: document.querySelector('#response-output .initial-message'),
+            loginButton: document.getElementById('login-button'),
+            logoutButton: document.getElementById('logout-button'),
+            userInfoDiv: document.getElementById('user-info'),
+            userEmailSpan: document.getElementById('user-email'),
+            creditCounterSpan: document.getElementById('credit-counter'),
+            trialStatusSpan: document.getElementById('trial-status'),
+            authModal: document.getElementById('auth-modal'),
+            authEmailInput: document.getElementById('auth-email'),
+            authPasswordInput: document.getElementById('auth-password'),
+            authActionButton: document.getElementById('auth-action-button'),
+            googleSigninButton: document.getElementById('google-signin-button'),
+            authErrorP: document.getElementById('auth-error'),
+            modalTitle: document.getElementById('modal-title'),
+            modalSwitchText: document.getElementById('modal-switch-text'),
+            modalSwitchLink: document.getElementById('modal-switch-link'),
+            buyCreditsOptionsDiv: document.getElementById('buy-credits-options')
+        };
+
+        // --- Firebase Configuration (Your provided values) ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyBDk3eS0b47T1OYj72CSJLT9hSjXmnJoqU",
+            authDomain: "synapse-pro-chat.firebaseapp.com",
+            projectId: "synapse-pro-chat",
+            storageBucket: "synapse-pro-chat.appspot.com", // Corrected from .firebasestorage.app
+            messagingSenderId: "694278049758",
+            appId: "1:694278049758:web:b8019082ebeaa170d3974f",
+            measurementId: "G-C20PJSEJ6S"
+        };
+        console.log("Firebase Config:", firebaseConfig);
+
+        // --- Stripe Configuration ---
+        // !!! REPLACE "price_YOUR_XXX_ID_HERE" with your ACTUAL Stripe Price IDs !!!
+        const STRIPE_PACKAGES = [
+            { priceId: "price_YOUR_500_CREDITS_ID_HERE",  label: "Buy 500 (€4.99)" },
+            { priceId: "price_YOUR_1000_CREDITS_ID_HERE", label: "Buy 1000 (€6.99)" },
+            { priceId: "price_YOUR_2000_CREDITS_ID_HERE", label: "Buy 2000 (€12.99)" },
+        ];
+        console.log("Stripe Packages Config:", STRIPE_PACKAGES);
+
+        // --- Initialize Firebase ---
+        try {
+            if (!firebase.apps.length) {
+                firebase.initializeApp(firebaseConfig);
+                console.log("Firebase initialized successfully.");
+            } else {
+                console.log("Firebase already initialized.");
+            }
+        } catch (e) {
+            console.error("Error initializing Firebase:", e);
+            alert("Error initializing Firebase. Check console.");
+        }
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+        const googleProvider = new firebase.auth.GoogleAuthProvider();
+
+        // --- Global State ---
+        let chatHistory = [];
+        let currentUser = null;
+        let userDocListener = null;
+        let isSigningUp = false;
+
+        const BACKEND_API_URL = '/api/chat'; // These will be used later
+        const CREATE_CHECKOUT_SESSION_URL = '/api/create-checkout-session';
+        const MAX_HISTORY_LENGTH = 10;
+
+        // --- Auth Modal Functions ---
+        function openAuthModal(forSignup = false) {
+            isSigningUp = forSignup;
+            dom.modalTitle.textContent = isSigningUp ? 'Sign Up' : 'Login';
+            dom.authActionButton.textContent = isSigningUp ? 'Sign Up' : 'Login';
+            dom.modalSwitchText.textContent = isSigningUp ? 'Already have an account?' : "Don't have an account?";
+            dom.modalSwitchLink.textContent = isSigningUp ? 'Login' : 'Sign Up';
+            dom.authErrorP.textContent = '';
+            dom.authEmailInput.value = '';
+            dom.authPasswordInput.value = '';
+            dom.authModal.style.display = 'flex';
+            dom.authEmailInput.focus();
+        }
+        function closeAuthModal() { dom.authModal.style.display = 'none'; }
+        function toggleAuthMode(event) {
+            event.preventDefault();
+            isSigningUp = !isSigningUp;
+            openAuthModal(isSigningUp); // Re-call to update texts and focus
+        }
+
+        // --- Firebase Auth Functions ---
+        async function handleAuthAction() {
+            const email = dom.authEmailInput.value;
+            const password = dom.authPasswordInput.value;
+            dom.authErrorP.textContent = '';
+            dom.authActionButton.disabled = true;
+            try {
+                if (isSigningUp) {
+                    await auth.createUserWithEmailAndPassword(email, password);
+                } else {
+                    await auth.signInWithEmailAndPassword(email, password);
+                }
+                closeAuthModal();
+            } catch (error) {
+                console.error("Auth action error:", error);
+                dom.authErrorP.textContent = error.message;
+            } finally {
+                dom.authActionButton.disabled = false;
+            }
+        }
+        async function handleGoogleSignIn() {
+            dom.authErrorP.textContent = '';
+            dom.googleSigninButton.disabled = true;
+            try {
+                await auth.signInWithPopup(googleProvider);
+                closeAuthModal();
+            } catch (error) {
+                console.error("Google Sign-in error:", error);
+                if (error.code !== 'auth/popup-closed-by-user') {
+                    dom.authErrorP.textContent = error.message;
+                }
+            } finally {
+                dom.googleSigninButton.disabled = false;
+            }
+        }
+        function handleLogout() { auth.signOut().catch(e => console.error("Logout error:", e)); }
+
+        // --- UI Update & User Data ---
+        function updateUIForAuthState(user) {
+            currentUser = user;
+            if (user) {
+                console.log("User logged in:", user.uid, user.email);
+                dom.loginButton.style.display = 'none';
+                dom.logoutButton.style.display = 'inline-block';
+                dom.userInfoDiv.style.display = 'flex';
+                dom.userEmailSpan.textContent = user.displayName || user.email;
+                dom.initialMessageDiv.innerHTML = `<img src="public/start.gif" alt="Start Guide" class="start-gif"><p class="intro-line">Welcome, ${user.displayName || user.email}! Ask me anything.</p>`;
+
+                if (userDocListener) userDocListener(); // Detach previous listener
+                userDocListener = db.collection('users').doc(user.uid).onSnapshot(doc => {
+                    let trialText = "Trial: -";
+                    let creditsText = "Credits: -";
+                    let showBuy = false;
+                    let canChat = false;
+                    let placeholder = "Loading status...";
+
+                    if (doc.exists) {
+                        const userData = doc.data();
+                        console.log("User data from Firestore:", userData);
+                        creditsText = `Credits: ${userData.credits || 0}`;
+                        const now = new Date();
+                        const signupDate = userData.signupDate.toDate();
+                        const daysSinceSignup = (now - signupDate) / (1000 * 60 * 60 * 24);
+                        const trialRequestsLeft = 3 - (userData.trialRequestsMadeToday || 0);
+
+                        if (daysSinceSignup <= 7) {
+                            trialText = `Trial: ${trialRequestsLeft > 0 ? trialRequestsLeft : 0}/3 today`;
+                            if (trialRequestsLeft > 0) canChat = true;
+                            else placeholder = "Daily trial limit reached. Buy credits or try again tomorrow.";
+                            showBuy = trialRequestsLeft <= 0; // Show buy if daily trial used up
+                        } else {
+                            trialText = 'Trial expired.';
+                            if ((userData.credits || 0) > 0) canChat = true;
+                            else placeholder = "No credits remaining. Please purchase more.";
+                            showBuy = true;
+                        }
+                    } else {
+                        console.log("User document does not exist yet in Firestore. Optimistic UI.");
+                        trialText = 'Trial: 3/3 today'; // Optimistic for new user
+                        creditsText = 'Credits: 0';
+                        canChat = true; // Allow first interaction to potentially create doc
+                        placeholder = "Ask something...";
+                    }
+                    dom.trialStatusSpan.textContent = trialText;
+                    dom.creditCounterSpan.textContent = creditsText;
+                    dom.buyCreditsOptionsDiv.style.display = showBuy ? 'flex' : 'none';
+
+                    dom.inputArea.style.display = 'flex'; // Always show input area when logged in
+                    dom.sendButton.disabled = !canChat;
+                    dom.userInput.disabled = !canChat;
+                    dom.userInput.placeholder = canChat ? "Ask something..." : placeholder;
+
+                }, error => {
+                    console.error("Error fetching user data:", error);
+                    dom.trialStatusSpan.textContent = "Error";
+                    dom.creditCounterSpan.textContent = "Error";
+                    dom.inputArea.style.display = 'none';
+                });
+            } else { // Logged out
+                console.log("User logged out.");
+                if (userDocListener) userDocListener();
+                dom.loginButton.style.display = 'inline-block';
+                dom.logoutButton.style.display = 'none';
+                dom.userInfoDiv.style.display = 'none';
+                dom.inputArea.style.display = 'none';
+                dom.buyCreditsOptionsDiv.style.display = 'none';
+                dom.initialMessageDiv.innerHTML = `<img src="public/start.gif" alt="Start Guide" class="start-gif"><p class="intro-line">Please log in or sign up to use Synapse Pro.</p>`;
+                dom.initialMessageDiv.style.display = 'block';
+                dom.responseOutput.innerHTML = ''; // Clear chat messages
+                dom.responseOutput.appendChild(dom.initialMessageDiv);
+                chatHistory = [];
+            }
+        }
+
+        // --- Stripe Checkout ---
+        async function buyCredits(priceId) {
+            if (!currentUser) { alert("Please log in to buy credits."); openAuthModal(); return; }
+            if (!priceId || priceId.includes("YOUR_") || priceId.includes("REPLACE_ME")) {
+                alert("Stripe Price ID is not configured correctly for this button. Please check the STRIPE_PACKAGES array in the code.");
+                return;
+            }
+            console.log(`Attempting to buy credits with Price ID: ${priceId}`);
+            // For local testing, this will fail until backend is set up.
+            // You can put an alert here for now.
+            alert(`LOCAL TEST: Would initiate purchase for Price ID: ${priceId}\nBackend API call to ${CREATE_CHECKOUT_SESSION_URL} is needed.`);
+            // When backend is ready, uncomment the fetch call below.
+            /*
+            try {
+                document.querySelectorAll('.buy-credits-button').forEach(btn => btn.disabled = true);
+                const idToken = await currentUser.getIdToken(true);
+                const response = await fetch(CREATE_CHECKOUT_SESSION_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${idToken}` },
+                    body: JSON.stringify({ priceId: priceId, userId: currentUser.uid })
+                });
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || `Stripe Checkout error: ${response.statusText}`);
+                }
+                const session = await response.json();
+                window.location.href = session.url;
+            } catch (error) {
+                console.error("Error creating Stripe checkout session:", error);
+                alert(`Could not initiate purchase: ${error.message}`);
+                document.querySelectorAll('.buy-credits-button').forEach(btn => btn.disabled = false);
+            }
+            */
+        }
+
+        function populateBuyCreditsButtons() {
+            dom.buyCreditsOptionsDiv.innerHTML = ''; // Clear existing
+            STRIPE_PACKAGES.forEach(pkg => {
+                if (pkg.priceId && !pkg.priceId.includes("YOUR_") && !pkg.priceId.includes("REPLACE_ME")) {
+                    const button = document.createElement('button');
+                    button.classList.add('buy-credits-button');
+                    button.textContent = pkg.label;
+                    button.onclick = () => buyCredits(pkg.priceId);
+                    dom.buyCreditsOptionsDiv.appendChild(button);
+                } else {
+                    console.warn(`Stripe Price ID for "${pkg.label}" is not configured correctly in STRIPE_PACKAGES.`);
+                }
+            });
+        }
+
+        // --- Chat Functions (Your existing, paths updated if needed) ---
+        function toggleTheme() { /* ... same as before ... */ }
+        function applySavedTheme() { /* ... same as before ... */ }
+        function createMessageElement(text, type = 'bot', isThinking = false, isError = false) {
+            const messageDiv = document.createElement('div');
+            messageDiv.classList.add('message');
+            if (isThinking) {
+                messageDiv.classList.add('thinking-message');
+                const img = document.createElement('img'); img.src = 'public/loading.gif'; img.alt = 'Loading...'; img.classList.add('loading-gif'); messageDiv.appendChild(img);
+                const textNode = document.createTextNode('Analyzing...'); messageDiv.appendChild(textNode);
+                messageDiv.dataset.thinkingId = `thinking-${Date.now()}`;
+            } else if (isError) {
+                messageDiv.classList.add('bot-message', 'error-message');
+                messageDiv.textContent = text;
+            } else if (type === 'bot') {
+                messageDiv.classList.add('bot-message');
+                messageDiv.innerHTML = text; // AI returns HTML
+            }
+            return messageDiv;
+        }
+        function scrollToBottom() { setTimeout(() => { dom.responseOutput.scrollTop = dom.responseOutput.scrollHeight; }, 50); }
+        function generateFollowUpButtons(messageElement) {
+            if (messageElement.classList.contains('error-message') || messageElement.classList.contains('initial-message') || messageElement.classList.contains('thinking-message')) return;
+            const buttonArea = document.createElement('div');
+            buttonArea.classList.add('follow-up-buttons');
+            ["Explain further", "Give an example"].forEach(suggestion => {
+                const button = document.createElement('button'); button.textContent = suggestion;
+                button.onclick = () => {
+                    dom.responseOutput.querySelectorAll('.follow-up-buttons').forEach(area => area.remove());
+                    dom.userInput.value = suggestion; handleSend(dom.userInput);
+                };
+                buttonArea.appendChild(button);
+            });
+            messageElement.appendChild(buttonArea); scrollToBottom();
+        }
+
+        async function handleSend(inputElement) {
+            if (!currentUser) { alert("Please log in to send a message."); openAuthModal(); return; }
+            const inputText = inputElement.value.trim(); if (!inputText) return;
+
+            const UIElementsToDisable = [dom.userInput, dom.sendButton];
+            UIElementsToDisable.forEach(el => el.disabled = true);
+            if (inputElement === dom.userInput) dom.userInput.value = '';
+
+            if (dom.initialMessageDiv.style.display !== 'none') dom.initialMessageDiv.style.display = 'none';
+            dom.responseOutput.querySelectorAll('.follow-up-buttons').forEach(area => area.remove());
+
+            const thinkingMsgElement = createMessageElement('', 'bot', true);
+            dom.responseOutput.appendChild(thinkingMsgElement); scrollToBottom();
+
+            // For local testing, this will fail until backend is set up with auth.
+            // You can put an alert here for now or a mock response.
+            alert(`LOCAL TEST: Would send message: "${inputText}" to ${BACKEND_API_URL}.\nBackend API call is needed for full functionality.`);
+            const currentThinkingEl = dom.responseOutput.querySelector(`[data-thinking-id="${thinkingMsgElement.dataset.thinkingId}"]`);
+            if (currentThinkingEl) {
+                 const mockError = createMessageElement("LOCAL TEST: Chat backend not connected.", 'bot', false, true);
+                 currentThinkingEl.replaceWith(mockError);
+            }
+            UIElementsToDisable.forEach(el => el.disabled = false); // Re-enable for local test
+            if (currentUser) { // Re-evaluate input state based on current user data snapshot
+                updateUIForAuthState(currentUser); // This will call the snapshot logic again
+            }
+            scrollToBottom();
+
+
+            /* // UNCOMMENT WHEN BACKEND IS READY
+            try {
+                const idToken = await currentUser.getIdToken(true);
+                const response = await fetch(BACKEND_API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${idToken}` },
+                    body: JSON.stringify({ userMessage: inputText, chatHistory: chatHistory })
+                });
+                const currentThinkingEl = dom.responseOutput.querySelector(`[data-thinking-id="${thinkingMsgElement.dataset.thinkingId}"]`);
+
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({ error: `Backend Error: ${response.statusText}` }));
+                    let errMsg = `Error ${response.status}: ${errorData.error || response.statusText}`;
+                    // ... (error handling as before)
+                    const errEl = createMessageElement(errMsg, 'bot', false, true);
+                    if (currentThinkingEl) currentThinkingEl.replaceWith(errEl); else dom.responseOutput.appendChild(errEl);
+                    if (response.status === 402 || response.status === 403) {
+                        // The onSnapshot listener should handle UI update for credits/trial.
+                    }
+                    return;
+                }
+                const data = await response.json();
+                if (data.choices && data.choices[0].message) {
+                    const botReply = data.choices[0].message.content;
+                    const replyElement = createMessageElement(botReply, 'bot');
+                    chatHistory.push({ role: "user", content: inputText });
+                    chatHistory.push({ role: "assistant", content: botReply });
+                    if (chatHistory.length > MAX_HISTORY_LENGTH) chatHistory = chatHistory.slice(-MAX_HISTORY_LENGTH);
+                    if (currentThinkingEl) currentThinkingEl.replaceWith(replyElement); else dom.responseOutput.appendChild(replyElement);
+                    generateFollowUpButtons(replyElement);
+                } else if (data.error) {
+                    const errEl = createMessageElement(`Backend Error: ${data.error}`, 'bot', false, true);
+                    if (currentThinkingEl) currentThinkingEl.replaceWith(errEl); else dom.responseOutput.appendChild(errEl);
+                } else { throw new Error('Unexpected response structure.'); }
+            } catch (error) {
+                console.error('Error in handleSend:', error);
+                const currentThinkingEl = dom.responseOutput.querySelector(`[data-thinking-id="${thinkingMsgElement.dataset.thinkingId}"]`);
+                const errEl = createMessageElement(`Communication error: ${error.message}`, 'bot', false, true);
+                if (currentThinkingEl) currentThinkingEl.replaceWith(errEl); else dom.responseOutput.appendChild(errEl);
+            } finally {
+                // Re-enable based on current auth and credit/trial status
+                if (currentUser) { // The onSnapshot listener should correctly set disabled states.
+                     updateUIForAuthState(currentUser); // Call again to ensure latest state reflected
+                } else {
+                    UIElementsToDisable.forEach(el => el.disabled = false);
+                }
+                scrollToBottom();
+            }
+            */
+        }
+
+        // --- Initialization ---
+        function initializeApp() {
+            console.log("Initializing app...");
+            applySavedTheme();
+            populateBuyCreditsButtons();
+
+            auth.onAuthStateChanged(user => {
+                console.log("Auth state changed. User:", user ? user.uid : "null");
+                updateUIForAuthState(user);
+            });
+
+            const query = new URLSearchParams(window.location.search);
+            if (query.get("payment_success") === "true") {
+                const successMsg = createMessageElement("<strong>Payment successful!</strong><br>Your credits should update shortly.", 'bot');
+                successMsg.style.borderColor = 'var(--highlight-color-concept)';
+                dom.responseOutput.appendChild(successMsg); scrollToBottom();
+                window.history.replaceState({}, document.title, window.location.pathname);
+            }
+            if (query.get("payment_canceled") === "true") {
+                const cancelMsg = createMessageElement("<strong>Payment canceled.</strong><br>Credits not updated.", 'bot');
+                cancelMsg.style.borderColor = '#dc3545';
+                dom.responseOutput.appendChild(cancelMsg); scrollToBottom();
+                window.history.replaceState({}, document.title, window.location.pathname);
+            }
+            console.log("App initialized.");
+        }
+
+        // --- Event Listeners Setup ---
+        dom.loginButton.addEventListener('click', () => openAuthModal(false));
+        dom.logoutButton.addEventListener('click', handleLogout);
+        dom.authActionButton.addEventListener('click', handleAuthAction);
+        dom.googleSigninButton.addEventListener('click', handleGoogleSignIn);
+        dom.authEmailInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') handleAuthAction(); });
+        dom.authPasswordInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') handleAuthAction(); });
+        dom.sendButton.addEventListener('click', () => handleSend(dom.userInput));
+        dom.userInput.addEventListener('keypress', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(dom.userInput); } });
+        dom.darkModeToggle.addEventListener('change', toggleTheme);
+
+        initializeApp();
+
+    </script>
+</body>
+</html>
