@@ -1,3 +1,5 @@
+--- START OF FILE index.html ---
+
 <!DOCTYPE html>
 <html lang="de">
 <head>
@@ -148,12 +150,9 @@
             top: 0; left: 0; right: 0; bottom: 0;
             border-radius: 8px;
             padding: 6px;
-            /* NEU: Farbverlauf mit den gewünschten Farben */
             background: linear-gradient(45deg, #a3cbff, #c5d4e7, #a3cbff);
             background-size: 200% 200%;
-            -webkit-mask:
-                linear-gradient(#fff 0 0) content-box,
-                linear-gradient(#fff 0 0);
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
             -webkit-mask-composite: xor;
             mask-composite: exclude;
             animation: gradient-animation 4s ease infinite;
@@ -163,26 +162,14 @@
              display: block; margin: 0 auto 15px auto;
              max-width: var(--start-gif-max-width); height: auto;
         }
-        /* Angepasstes Styling für den Titel */
         .initial-message .title {
-            font-size: 4.2em;
-            font-weight: 400; /* Normale Dicke für "Synapse" */
-            color: #ffffff;
-            margin-bottom: 10px;
-            line-height: 1.1;
+            font-size: 4.2em; font-weight: 400; color: #ffffff;
+            margin-bottom: 10px; line-height: 1.1;
         }
-        /* NEU: Styling für das Wort "Bot" im Titel */
-        .initial-message .title span {
-            font-weight: 300; /* Dünnere Schriftart */
-        }
-        /* Angepasstes Styling für den Begrüßungstext */
+        .initial-message .title span { font-weight: 300; }
         .initial-message .intro-line {
-             margin-bottom: 0;
-             font-weight: 400;
-             font-size: 0.95em;
-             color: #ffffff;
-             /* NEU: Abstand zum Titel */
-             margin-top: 15px;
+             margin-bottom: 0; font-weight: 400; font-size: 0.95em;
+             color: #ffffff; margin-top: 15px;
          }
 
         /* Thinking/Loading Styling */
@@ -246,6 +233,32 @@
         #send-button:hover { opacity: 0.9; }
         #send-button:disabled { background-color: #6c757d; cursor: not-allowed; transition: none; }
         [data-theme="dark"] #send-button:disabled { background-color: #495057; }
+        
+        /* --- NEU: API Key Area Styling --- */
+        #api-key-area {
+            padding: 10px 15px;
+            background-color: var(--response-bg);
+            text-align: center;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+        #api-key-input {
+            width: 300px; padding: 5px 8px;
+            border-radius: 5px; border: 1px solid var(--border-color);
+            background-color: var(--input-bg); color: var(--text-color);
+        }
+        #save-key-button {
+            padding: 5px 12px;
+            border-radius: 5px; border: 1px solid var(--button-send-bg);
+            background-color: var(--button-send-bg); color: var(--button-send-text);
+            cursor: pointer;
+        }
+        #key-status { font-size: 0.8em; color: var(--footer-text); min-width: 100px; text-align: left; }
+
 
         /* Footer Disclaimer */
         #footer-disclaimer {
@@ -278,12 +291,18 @@
         <!-- Initial Message -->
         <div class="message bot-message initial-message">
             <img src="start.gif" alt="Start Guide" class="start-gif">
-            <!-- NEU: HTML für den Titel angepasst, um "Bot" separat zu stylen -->
             <h2 class="title">Synapse <span>AI</span></h2>
             <p class="intro-line">Hey! I am your personal Anki Buddy. Click the buttons above to start, don't forget to select your preferred language.</p>
         </div>
         <!-- Dynamic messages will be added here -->
     </main>
+    
+    <!-- NEU: API Key Area -->
+    <div id="api-key-area">
+        <input type="password" id="api-key-input" placeholder="Enter your Synapse Pro Key...">
+        <button id="save-key-button">Save Key</button>
+        <span id="key-status"></span>
+    </div>
 
     <!-- User Input Area -->
     <div id="input-area">
@@ -304,7 +323,6 @@
     </footer>
 
     <script>
-        // JAVASCRIPT IST IDENTISCH ZUR VORHERIGEN VERSION
         // --- DOM Element References ---
         const responseOutput = document.getElementById('response-output');
         const promptInput = document.getElementById('prompt-input');
@@ -312,13 +330,18 @@
         const userInput = document.getElementById('user-input');
         const sendButton = document.getElementById('send-button');
         const darkModeToggle = document.getElementById('darkmode-toggle');
+        // --- NEU: API Key Element References ---
+        const apiKeyInput = document.getElementById('api-key-input');
+        const saveKeyButton = document.getElementById('save-key-button');
+        const keyStatus = document.getElementById('key-status');
 
         // --- CONFIGURATION ---
-        const BACKEND_API_URL = '/api/chat';
+        const BACKEND_API_URL = 'https://synapse-pro.vercel.app/api/chat'; // WICHTIG: Deine Vercel URL
         const MAX_HISTORY_LENGTH = 10;
 
         // --- Global State ---
         let chatHistory = [];
+        let currentApiKey = null; // Hier speichern wir den geladenen Schlüssel
 
         // --- Event Listeners ---
         goButton.addEventListener('click', () => handleSend(promptInput));
@@ -326,13 +349,54 @@
         sendButton.addEventListener('click', () => handleSend(userInput));
         userInput.addEventListener('keypress', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(userInput); } });
         darkModeToggle.addEventListener('change', toggleTheme);
+        // --- NEU: Event Listener für API Key ---
+        saveKeyButton.addEventListener('click', saveApiKey);
 
-        // --- Functions ---
+        // --- NEU: Funktionen zur Kommunikation mit Python ---
+        function saveApiKey() {
+            const key = apiKeyInput.value.trim();
+            // Sendet den Befehl und den Schlüssel an den Python-Teil des Add-ons
+            pycmd("synapse_save_key:" + key);
+        }
+
+        // Diese Funktion wird von Python aufgerufen, nachdem der Speicherversuch abgeschlossen ist
+        function onKeySaveResult(success) {
+            if (success) {
+                keyStatus.textContent = "Key saved!";
+                keyStatus.style.color = 'green';
+                apiKeyInput.value = ''; // Feld aus Sicherheitsgründen leeren
+                // Fordert den Schlüssel neu an, um die UI und den Zustand zu aktualisieren
+                pycmd("synapse_get_key");
+            } else {
+                keyStatus.textContent = "Save failed.";
+                keyStatus.style.color = 'red';
+            }
+            setTimeout(() => { 
+                // Status nach ein paar Sekunden zurücksetzen
+                pycmd("synapse_get_key");
+            }, 3000);
+        }
+
+        // Diese Funktion wird von Python aufgerufen und liefert den gespeicherten Schlüssel
+        function onKeyReceived(key) {
+            currentApiKey = key; // Speichert den Schlüssel in unserer globalen Variable
+            if (key) {
+                keyStatus.textContent = "Pro Key active.";
+                keyStatus.style.color = 'green';
+            } else {
+                keyStatus.textContent = "No Pro Key found.";
+                keyStatus.style.color = 'gray';
+            }
+        }
+        
+        // --- Bestehende Funktionen ---
         function toggleTheme() {
-             if (darkModeToggle.checked) { document.documentElement.setAttribute('data-theme', 'dark'); localStorage.setItem('theme', 'dark'); }
-             else { document.documentElement.removeAttribute('data-theme'); localStorage.setItem('theme', 'light'); }
+             if (darkModeToggle.checked) { document.documentElement.setAttribute('data-theme', 'dark'); }
+             else { document.documentElement.removeAttribute('data-theme'); }
         }
         function applySavedTheme() {
+            // Hinweis: Diese Funktion verwendet localStorage. Die Darkmode-Einstellung wird nicht
+            // über Anki-Profile hinweg synchronisiert. Dies kann bei Bedarf angepasst werden.
             const savedTheme = localStorage.getItem('theme');
             if (savedTheme === 'dark') { darkModeToggle.checked = true; document.documentElement.setAttribute('data-theme', 'dark'); }
             else { darkModeToggle.checked = false; document.documentElement.removeAttribute('data-theme'); }
@@ -360,9 +424,7 @@
         function scrollToBottom() { setTimeout(() => { responseOutput.scrollTop = responseOutput.scrollHeight; }, 50); }
 
         function generateFollowUpButtons(messageElement) {
-            if (messageElement.classList.contains('error-message') || messageElement.classList.contains('initial-message')) {
-                return;
-            }
+            if (messageElement.classList.contains('error-message') || messageElement.classList.contains('initial-message')) { return; }
             const buttonArea = document.createElement('div');
             buttonArea.classList.add('follow-up-buttons');
             const suggestions = ["Explain further", "Give an example"];
@@ -392,12 +454,18 @@
             try {
                 const response = await fetch(BACKEND_API_URL, {
                     method: 'POST', headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ userMessage: inputText, chatHistory: chatHistory })
+                    // --- WICHTIGE ÄNDERUNG: Sendet den API-Schlüssel mit ---
+                    body: JSON.stringify({ 
+                        userMessage: inputText, 
+                        chatHistory: chatHistory,
+                        apiKey: currentApiKey 
+                    })
                 });
                 const currentThinkingElement = responseOutput.querySelector(`[data-thinking-id="${thinkingMsgElement.dataset.thinkingId}"]`);
                 if (!response.ok) {
-                    const errorData = await response.json().catch(() => ({ error: `Fehler beim Backend-Aufruf: ${response.statusText}` }));
-                    console.error('Backend/API Error:', response.status, errorData); const errorMessage = `Fehler ${response.status}: ${errorData.error || response.statusText}`;
+                    const errorData = await response.json().catch(() => ({ error: `Backend Error: ${response.statusText}` }));
+                    console.error('Backend/API Error:', response.status, errorData); 
+                    const errorMessage = `${errorData.error || response.statusText}`; // Zeigt die Fehlermeldung vom Backend an
                     const errorElement = createMessageElement(errorMessage, 'bot', false, true);
                     if (currentThinkingElement) { currentThinkingElement.replaceWith(errorElement); } else { responseOutput.appendChild(errorElement); } return;
                 }
@@ -410,13 +478,13 @@
                     if (currentThinkingElement) { currentThinkingElement.replaceWith(replyElement); generateFollowUpButtons(replyElement); }
                     else { responseOutput.appendChild(replyElement); generateFollowUpButtons(replyElement); }
                 } else if (data.error) {
-                     console.error('Backend returned controlled error:', data.error); const errorElement = createMessageElement(`Backend Fehler: ${data.error}`, 'bot', false, true);
+                     const errorElement = createMessageElement(`Backend Error: ${data.error}`, 'bot', false, true);
                      if (currentThinkingElement) { currentThinkingElement.replaceWith(errorElement); } else { responseOutput.appendChild(errorElement); } return;
-                } else { throw new Error('Unerwartete Antwortstruktur vom Backend.'); }
+                } else { throw new Error('Unexpected response structure from backend.'); }
             } catch (error) {
-                console.error('Fehler bei der Kommunikation mit dem Backend:', error);
+                console.error('Communication error with backend:', error);
                 const currentThinkingElement = responseOutput.querySelector(`[data-thinking-id="${thinkingMsgElement.dataset.thinkingId}"]`);
-                const displayError = `Kommunikationsfehler: ${error.message}`; const errorElement = createMessageElement(displayError, 'bot', false, true);
+                const displayError = `Communication Error: ${error.message}`; const errorElement = createMessageElement(displayError, 'bot', false, true);
                 if (currentThinkingElement) { currentThinkingElement.replaceWith(errorElement); } else { responseOutput.appendChild(errorElement); }
             } finally {
                 promptInput.disabled = false; goButton.disabled = false; userInput.disabled = false; sendButton.disabled = false; userInput.focus(); scrollToBottom();
@@ -424,8 +492,14 @@
         }
 
         // --- Initialization ---
-        applySavedTheme();
-        userInput.focus();
+        function initializeApp() {
+            applySavedTheme();
+            userInput.focus();
+            // --- NEU: Fragt beim Start den in Anki gespeicherten Schlüssel ab ---
+            pycmd("synapse_get_key");
+        }
+
+        initializeApp();
 
     </script>
 </body>
