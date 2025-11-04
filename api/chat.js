@@ -1,5 +1,3 @@
---- START OF FILE chat.js ---
-
 // /api/chat.js
 
 // --- NEU: Vercel KV importieren ---
