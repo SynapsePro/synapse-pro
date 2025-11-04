@@ -169,6 +169,9 @@
              margin-bottom: 0; font-weight: 400; font-size: 0.95em;
              color: #ffffff; margin-top: 15px;
          }
+        .initial-message .intro-line.error {
+            color: #ffdddd; font-weight: 600; background-color: rgba(0,0,0,0.3); padding: 5px 10px; border-radius: 5px;
+        }
 
         /* Thinking/Loading Styling */
         .thinking-message {
@@ -232,31 +235,7 @@
         #send-button:disabled { background-color: #6c757d; cursor: not-allowed; transition: none; }
         [data-theme="dark"] #send-button:disabled { background-color: #495057; }
         
-        /* --- NEU: API Key Area Styling --- */
-        #api-key-area {
-            padding: 10px 15px;
-            background-color: var(--response-bg);
-            text-align: center;
-            border-top: 1px solid var(--border-color);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            flex-shrink: 0;
-        }
-        #api-key-input {
-            width: 300px; padding: 5px 8px;
-            border-radius: 5px; border: 1px solid var(--border-color);
-            background-color: var(--input-bg); color: var(--text-color);
-        }
-        #save-key-button {
-            padding: 5px 12px;
-            border-radius: 5px; border: 1px solid var(--button-send-bg);
-            background-color: var(--button-send-bg); color: var(--button-send-text);
-            cursor: pointer;
-        }
-        #key-status { font-size: 0.8em; color: var(--footer-text); min-width: 100px; text-align: left; }
-
+        /* --- ENTFERNT: API Key Area Styling --- */
 
         /* Footer Disclaimer */
         #footer-disclaimer {
@@ -295,13 +274,8 @@
         <!-- Dynamic messages will be added here -->
     </main>
     
-    <!-- NEU: API Key Area -->
-    <div id="api-key-area">
-        <input type="password" id="api-key-input" placeholder="Enter your Synapse Pro Key...">
-        <button id="save-key-button">Save Key</button>
-        <span id="key-status"></span>
-    </div>
-
+    <!-- --- ENTFERNT: API Key Area --- -->
+    
     <!-- User Input Area -->
     <div id="input-area">
         <input type="text" id="user-input" placeholder="Ask something...">
@@ -328,10 +302,7 @@
         const userInput = document.getElementById('user-input');
         const sendButton = document.getElementById('send-button');
         const darkModeToggle = document.getElementById('darkmode-toggle');
-        // --- NEU: API Key Element References ---
-        const apiKeyInput = document.getElementById('api-key-input');
-        const saveKeyButton = document.getElementById('save-key-button');
-        const keyStatus = document.getElementById('key-status');
+        // --- ENTFERNT: API Key Element References ---
 
         // --- CONFIGURATION ---
         const BACKEND_API_URL = 'https://synapse-pro.vercel.app/api/chat'; // WICHTIG: Deine Vercel URL
@@ -339,7 +310,7 @@
 
         // --- Global State ---
         let chatHistory = [];
-        let currentApiKey = null; // Hier speichern wir den geladenen Schlüssel
+        // --- ENTFERNT: Globale `currentApiKey` Variable. Wir lesen direkt aus `window`.
 
         // --- Event Listeners ---
         goButton.addEventListener('click', () => handleSend(promptInput));
@@ -347,60 +318,10 @@
         sendButton.addEventListener('click', () => handleSend(userInput));
         userInput.addEventListener('keypress', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(userInput); } });
         darkModeToggle.addEventListener('change', toggleTheme);
-        // --- NEU: Event Listener für API Key ---
-        saveKeyButton.addEventListener('click', saveApiKey);
+        // --- ENTFERNT: Event Listener für API Key ---
 
-        // --- NEU: Funktionen zur Kommunikation mit Python ---
-        function saveApiKey() {
-            const key = apiKeyInput.value.trim();
-            // Sendet den Befehl und den Schlüssel an den Python-Teil des Add-ons
-            // Die `pycmd` Funktion wird von Ankis WebView bereitgestellt
-            if (typeof pycmd !== 'undefined') {
-                pycmd("synapse_save_key:" + key);
-            } else {
-                console.warn("pycmd is not defined. Running in a standard browser?");
-                // Fallback für Testzwecke im normalen Browser
-                onKeySaveResult(true); // Simuliere Erfolg
-            }
-        }
-
-        // Diese Funktion wird von Python aufgerufen, nachdem der Speicherversuch abgeschlossen ist
-        function onKeySaveResult(success) {
-            if (success) {
-                keyStatus.textContent = "Key saved!";
-                keyStatus.style.color = 'green';
-                apiKeyInput.value = ''; // Feld aus Sicherheitsgründen leeren
-                // Fordert den Schlüssel neu an, um die UI und den Zustand zu aktualisieren
-                if (typeof pycmd !== 'undefined') {
-                    pycmd("synapse_get_key");
-                } else {
-                    onKeyReceived("DUMMY-KEY-FOR-BROWSER"); // Simulierter Empfang
-                }
-            } else {
-                keyStatus.textContent = "Save failed.";
-                keyStatus.style.color = 'red';
-            }
-            setTimeout(() => { 
-                // Status nach ein paar Sekunden zurücksetzen
-                if (typeof pycmd !== 'undefined') {
-                     pycmd("synapse_get_key");
-                } else {
-                     onKeyReceived(currentApiKey); // UI mit aktuellem Schlüssel aktualisieren
-                }
-            }, 3000);
-        }
-
-        // Diese Funktion wird von Python aufgerufen und liefert den gespeicherten Schlüssel
-        function onKeyReceived(key) {
-            currentApiKey = key; // Speichert den Schlüssel in unserer globalen Variable
-            if (key) {
-                keyStatus.textContent = "Pro Key active.";
-                keyStatus.style.color = 'green';
-            } else {
-                keyStatus.textContent = "No Pro Key found.";
-                keyStatus.style.color = 'gray';
-            }
-        }
+        // --- ENTFERNT: Funktionen zur Kommunikation mit Python (pycmd) ---
+        // Die Lizenzschlüssel-Logik wird nun komplett vom Python-Teil gesteuert.
         
         // --- Bestehende Funktionen ---
         function toggleTheme() {
@@ -465,20 +386,27 @@
             const thinkingMsgElement = createMessageElement('', 'bot', true); responseOutput.appendChild(thinkingMsgElement); scrollToBottom();
 
             try {
+                // --- WICHTIGE ÄNDERUNG: Liest den Lizenzschlüssel direkt aus dem `window`-Objekt,
+                // wo er vom Python-Addon per JavaScript-Injection platziert wird.
+                const licenseKey = window.__licenseKey || null;
+
                 const response = await fetch(BACKEND_API_URL, {
                     method: 'POST', headers: { 'Content-Type': 'application/json' },
-                    // --- WICHTIGE ÄNDERUNG: Sendet den API-Schlüssel mit ---
                     body: JSON.stringify({ 
                         userMessage: inputText, 
                         chatHistory: chatHistory,
-                        apiKey: currentApiKey 
+                        apiKey: licenseKey // Sendet den injizierten Schlüssel mit
                     })
                 });
                 const currentThinkingElement = responseOutput.querySelector(`[data-thinking-id="${thinkingMsgElement.dataset.thinkingId}"]`);
                 if (!response.ok) {
                     const errorData = await response.json().catch(() => ({ error: `Backend Error: ${response.statusText}` }));
                     console.error('Backend/API Error:', response.status, errorData); 
-                    const errorMessage = `${errorData.error || response.statusText}`; // Zeigt die Fehlermeldung vom Backend an
+                    // Angepasste Fehlermeldung, wenn der Schlüssel fehlt oder ungültig ist
+                    let errorMessage = `${errorData.error || response.statusText}`;
+                    if (response.status === 401 || response.status === 403) {
+                         errorMessage = "Authorization failed. Your Synapse Pro Key might be invalid or missing. Please restart Anki to re-enter it.";
+                    }
                     const errorElement = createMessageElement(errorMessage, 'bot', false, true);
                     if (currentThinkingElement) { currentThinkingElement.replaceWith(errorElement); } else { responseOutput.appendChild(errorElement); } return;
                 }
@@ -508,13 +436,27 @@
         function initializeApp() {
             applySavedTheme();
             userInput.focus();
-            // --- NEU: Fragt beim Start den in Anki gespeicherten Schlüssel ab ---
-            if (typeof pycmd !== 'undefined') {
-                pycmd("synapse_get_key");
-            } else {
-                console.warn("pycmd not defined. Simulating key check.");
-                onKeyReceived(null); // Simuliert, dass kein Schlüssel gefunden wurde
-            }
+            
+            // --- NEU: Bonus-Funktion - Prüfung auf den injizierten Lizenzschlüssel ---
+            // Wir warten einen kurzen Moment, um sicherzustellen, dass der Python-Code
+            // Zeit hatte, den Schlüssel zu injizieren.
+            setTimeout(() => {
+                if (typeof window.__licenseKey === 'undefined' || !window.__licenseKey) {
+                    console.warn("License key not found in window.__licenseKey.");
+                    const initialMessage = document.querySelector('.initial-message');
+                    if (initialMessage) {
+                        const introLine = initialMessage.querySelector('.intro-line');
+                        introLine.textContent = "License key is missing. Please restart Anki and enter your key when prompted.";
+                        introLine.classList.add('error');
+                    }
+                    // Deaktiviere die Eingabefelder, da ohne Schlüssel keine Anfragen möglich sind.
+                    userInput.disabled = true;
+                    sendButton.disabled = true;
+                    userInput.placeholder = "License key required to operate.";
+                } else {
+                     console.log("License key successfully detected.");
+                }
+            }, 1500); // 1.5 Sekunden Verzögerung als Sicherheitsmarge
         }
 
         initializeApp();
@@ -522,3 +464,4 @@
     </script>
 </body>
 </html>
+--- END OF FILE index.html ---
