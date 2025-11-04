@@ -1,69 +1,231 @@
+--- START OF FILE index.html ---
+
 <!DOCTYPE html>
 <html lang="de">
 <head>
-    <!-- Dein ganzer <head> Inhalt bleibt unverändert -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Synapse Pro - Mixtral Chat</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+
     <style>
-        /* Deine ganzen <style> Regeln bleiben unverändert */
-        :root { /* ... */ }
-        [data-theme="dark"] { /* ... */ }
-        /* ...alle anderen Styles... */
-        #api-key-area { /* ... */ }
+        :root {
+            --body-bg: #F6F6F6;
+            --response-bg: #ffffff;
+            --text-color: #212529;
+            --border-color: #dee2e6;
+            --input-bg: #ffffff;
+            --placeholder-color: #6c757d;
+            --button-send-bg: #0071D3;
+            --button-send-text: #ffffff;
+            --footer-text: #6c757d;
+            --loading-gif-height: 60px;
+            --start-gif-max-width: 100px;
+            --followup-button-bg: #e9ecef;
+            --followup-button-text: #495057;
+            --followup-button-border: #ced4da;
+            --bot-message-border-color: #0071D3;
+            --hidden-color: #F6F6F6;
+            --highlight-color-term: #005EB8;
+            --highlight-color-concept: #28a745;
+        }
+
+        [data-theme="dark"] {
+            --body-bg: #212529;
+            --response-bg: rgb(50, 50, 50);
+            --text-color: #f8f9fa;
+            --border-color: #495057;
+            --input-bg: rgb(50, 50, 50);
+            --placeholder-color: #adb5bd;
+            --button-send-bg: #005eb8;
+            --button-send-text: #ffffff;
+            --footer-text: #adb5bd;
+            --followup-button-bg: rgb(50, 50, 50);
+            --followup-button-text: #f8f9fa;
+            --followup-button-border: #6c757d;
+            --bot-message-border-color: #0071D3;
+            --hidden-color: var(--body-bg);
+            --highlight-color-term: #66bfff;
+            --highlight-color-concept: #52c41a;
+        }
+
+        @keyframes gradient-animation {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Poppins', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--body-bg);
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        #prompt-bar {
+            display: flex; align-items: center; padding: 2px 10px;
+            background-color: var(--hidden-color); border-bottom: none;
+            flex-shrink: 0; transition: none;
+        }
+        #prompt-input {
+            flex-grow: 1; padding: 3px 8px; font-size: 0.75em;
+            border: 1px solid var(--hidden-color); border-radius: 3px 0 0 3px;
+            background-color: var(--hidden-color); color: var(--hidden-color);
+            border-right: none; outline: none; box-shadow: none; transition: none;
+        }
+        #prompt-input::placeholder { color: var(--hidden-color); }
+        #go-button {
+            padding: 3px 10px; font-size: 0.75em; font-weight: 600;
+            background-color: var(--hidden-color); color: var(--hidden-color);
+            border: 1px solid var(--hidden-color); border-left: none;
+            border-radius: 0 3px 3px 0; cursor: pointer; white-space: nowrap; transition: none;
+        }
+
+        #response-output {
+            flex-grow: 1; overflow-y: auto; padding: 5px 25px 25px 25px;
+            background-color: var(--body-bg); display: flex;
+            flex-direction: column; transition: background-color 0.3s;
+        }
+
+        .message.bot-message {
+            background-color: var(--response-bg); color: var(--text-color);
+            padding: 15px 20px; border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05); margin-bottom: 20px;
+            max-width: 100%; line-height: 1.6; white-space: pre-wrap;
+            border: 1px solid var(--bot-message-border-color);
+            transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+        }
+
+        .message.initial-message {
+            padding: 25px; text-align: center;
+            background-image: url('background.png'); background-size: cover;
+            background-position: center; display: flex; flex-direction: column;
+            justify-content: center; align-items: center; min-height: 380px;
+            border: none; position: relative; z-index: 1; overflow: hidden;
+        }
+        .message.initial-message::before {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            border-radius: 8px; padding: 6px;
+            background: linear-gradient(45deg, #a3cbff, #c5d4e7, #a3cbff);
+            background-size: 200% 200%;
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor; mask-composite: exclude;
+            animation: gradient-animation 4s ease infinite; z-index: -1;
+        }
+        .start-gif { display: block; margin: 0 auto 15px auto; max-width: var(--start-gif-max-width); height: auto; }
+        .initial-message .title { font-size: 4.2em; font-weight: 400; color: #ffffff; margin-bottom: 10px; line-height: 1.1; }
+        .initial-message .title span { font-weight: 300; }
+        .initial-message .intro-line { margin-bottom: 0; font-weight: 400; font-size: 0.95em; color: #ffffff; margin-top: 15px; }
+
+        .thinking-message { text-align: center; font-style: italic; color: var(--placeholder-color); background-color: transparent; box-shadow: none; border: none; padding: 10px; margin-bottom: 20px; }
+        .loading-gif { display: block; height: var(--loading-gif-height); width: auto; margin: 0 auto 10px auto; }
+
+        .error-message { background-color: #f8d7da; color: #842029; font-weight: bold; border: 1px solid #f5c2c7; }
+        [data-theme="dark"] .error-message { background-color: #842029; color: #f8d7da; border: 1px solid #8f2b36; }
+
+        .follow-up-buttons { margin-top: 15px; padding-top: 10px; border-top: 1px dashed var(--border-color); display: flex; gap: 10px; flex-wrap: wrap; }
+        .follow-up-buttons button { padding: 6px 12px; font-size: 0.9em; border-radius: 15px; border: 1px solid var(--followup-button-border); background-color: var(--followup-button-bg); color: var(--followup-button-text); cursor: pointer; transition: background-color 0.2s; }
+        .follow-up-buttons button:hover { opacity: 0.85; }
+
+        #input-area { display: flex; padding: 15px; border-top: 1px solid var(--border-color); background-color: var(--body-bg); flex-shrink: 0; }
+        #user-input { flex-grow: 1; padding: 10px 15px; border: 1px solid var(--border-color); border-radius: 20px; margin-right: 10px; background-color: var(--input-bg); color: var(--text-color); font-size: 1em; resize: none; outline: none; }
+        #send-button { padding: 10px 20px; background-color: var(--button-send-bg); color: var(--button-send-text); border: none; border-radius: 20px; cursor: pointer; font-size: 1em; font-weight: 600; }
+        #send-button:disabled { background-color: #6c757d; cursor: not-allowed; }
+
+        /* NEU: Styling für den API-Schlüssel-Bereich */
+        #api-key-area { padding: 10px 15px; background-color: var(--response-bg); text-align: center; border-top: 1px solid var(--border-color); display: flex; align-items: center; justify-content: center; gap: 8px; flex-shrink: 0; }
+        #api-key-input { width: 300px; padding: 5px 8px; border-radius: 5px; border: 1px solid var(--border-color); background-color: var(--input-bg); color: var(--text-color); }
+        #save-key-button { padding: 5px 12px; border-radius: 5px; border: 1px solid var(--button-send-bg); background-color: var(--button-send-bg); color: var(--button-send-text); cursor: pointer; }
+        #key-status { font-size: 0.8em; color: var(--footer-text); min-width: 100px; text-align: left; }
+
+        #footer-disclaimer { padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; font-size: 0.75em; color: var(--footer-text); background-color: var(--body-bg); flex-shrink: 0; border-top: 1px solid var(--border-color); }
+        .darkmode-label { margin-right: 5px; font-size: 0.9em; }
+        .switch { position: relative; display: inline-block; width: 34px; height: 20px; vertical-align: middle; }
+        .switch input { display:none; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 20px; }
+        .slider:before { position: absolute; content: ""; height: 14px; width: 14px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: #0071D3; }
+        input:checked + .slider:before { transform: translateX(14px); }
+        .footer-toggle-container { display: flex; align-items: center; }
     </style>
 </head>
 <body>
-    <!-- Dein ganzes <body> HTML bleibt unverändert -->
-    <div id="prompt-bar"> <!-- ... --> </div>
-    <main id="response-output"> <!-- ... --> </main>
+    <div id="prompt-bar">
+        <input type="text" id="prompt-input" placeholder="Automation...">
+        <button id="go-button">Go</button>
+    </div>
+
+    <main id="response-output">
+        <div class="message bot-message initial-message">
+            <img src="start.gif" alt="Start Guide" class="start-gif">
+            <h2 class="title">Synapse <span>AI</span></h2>
+            <p class="intro-line">Hey! I am your personal Anki Buddy. Click the buttons above to start, don't forget to select your preferred language.</p>
+        </div>
+    </main>
+
     <div id="api-key-area">
         <input type="password" id="api-key-input" placeholder="Enter your Synapse Pro Key...">
         <button id="save-key-button">Save Key</button>
         <span id="key-status"></span>
     </div>
-    <div id="input-area"> <!-- ... --> </div>
-    <footer id="footer-disclaimer"> <!-- ... --> </footer>
+
+    <div id="input-area">
+        <input type="text" id="user-input" placeholder="Ask something...">
+        <button id="send-button">Send</button>
+    </div>
+
+    <footer id="footer-disclaimer">
+        <span>The Synapse Pro AI can make mistakes. Please check important Information.</span>
+        <div class="footer-toggle-container">
+            <span class="darkmode-label">Darkmode</span>
+            <label class="switch">
+                <input type="checkbox" id="darkmode-toggle">
+                <span class="slider round"></span>
+            </label>
+        </div>
+    </footer>
 
     <script>
         // --- DOM Element References ---
-        // (bleibt gleich)
         const responseOutput = document.getElementById('response-output');
+        const promptInput = document.getElementById('prompt-input');
+        const goButton = document.getElementById('go-button');
         const userInput = document.getElementById('user-input');
         const sendButton = document.getElementById('send-button');
         const darkModeToggle = document.getElementById('darkmode-toggle');
         const apiKeyInput = document.getElementById('api-key-input');
         const saveKeyButton = document.getElementById('save-key-button');
         const keyStatus = document.getElementById('key-status');
-        // prompt-bar Elemente, falls du sie brauchst
-        const promptInput = document.getElementById('prompt-input');
-        const goButton = document.getElementById('go-button');
-        
+
         // --- CONFIGURATION ---
         const BACKEND_API_URL = 'https://synapse-pro.vercel.app/api/chat';
         const MAX_HISTORY_LENGTH = 10;
-        const API_KEY_STORAGE_KEY = 'synapseApiKey';
+        const API_KEY_STORAGE_KEY = 'synapseApiKey'; // Name des Schlüssels im localStorage
 
         // --- Global State ---
         let chatHistory = [];
-        let currentApiKey = null;
 
         // --- Event Listeners ---
         goButton.addEventListener('click', () => handleSend(promptInput));
         sendButton.addEventListener('click', () => handleSend(userInput));
         userInput.addEventListener('keypress', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(userInput); } });
         darkModeToggle.addEventListener('change', toggleTheme);
-        
+        saveKeyButton.addEventListener('click', saveKeyAndSignalPython);
+
         // --- NEUER, ROBUSTER SPEICHER-MECHANISMUS ---
-        saveKeyButton.addEventListener('click', () => {
+        function saveKeyAndSignalPython() {
             const key = apiKeyInput.value.trim();
             if (key) {
                 // 1. Speichere den Schlüssel sofort im schnellen localStorage
                 localStorage.setItem(API_KEY_STORAGE_KEY, key);
-                currentApiKey = key; // Aktualisiere den globalen Zustand
                 updateKeyStatus();
                 apiKeyInput.value = '';
                 
@@ -72,11 +234,13 @@
                 console.log("Signaling Python to save key via URL change...");
                 window.location.href = `anki:save_key:${key}`;
             }
-        });
-        
+        }
+
+        // Diese Funktion wird von Python aufgerufen, um den Status nach der Injektion zu aktualisieren
+        // Sie wird auch lokal aufgerufen, um die UI reaktiv zu machen.
         function updateKeyStatus() {
-            currentApiKey = localStorage.getItem(API_KEY_STORAGE_KEY);
-            if (currentApiKey) {
+            const key = localStorage.getItem(API_KEY_STORAGE_KEY);
+            if (key) {
                 keyStatus.textContent = "Pro Key active.";
                 keyStatus.style.color = 'green';
             } else {
@@ -85,26 +249,75 @@
             }
         }
 
-        // --- Bestehende Funktionen (leicht angepasst) ---
-        // (createMessageElement, scrollToBottom, generateFollowUpButtons, toggleTheme, applySavedTheme bleiben unverändert)
-        function toggleTheme() { /* ... */ }
-        function applySavedTheme() { /* ... */ }
-        function createMessageElement(text, type, isThinking, isError) { /* ... */ }
-        function scrollToBottom() { /* ... */ }
-        function generateFollowUpButtons(messageElement) { /* ... */ }
-        
+        // --- Bestehende Funktionen ---
+        function toggleTheme() {
+             const isDark = document.documentElement.hasAttribute('data-theme');
+             if (!isDark) {
+                 document.documentElement.setAttribute('data-theme', 'dark');
+                 localStorage.setItem('theme', 'dark');
+             } else {
+                 document.documentElement.removeAttribute('data-theme');
+                 localStorage.setItem('theme', 'light');
+             }
+             darkModeToggle.checked = !isDark;
+        }
+
+        function applySavedTheme() {
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme === 'dark') {
+                darkModeToggle.checked = true;
+                document.documentElement.setAttribute('data-theme', 'dark');
+            }
+        }
+
+        function createMessageElement(text, type = 'bot', isThinking = false, isError = false) {
+             const messageDiv = document.createElement('div');
+             messageDiv.classList.add('message');
+             if (isThinking) {
+                 messageDiv.classList.add('thinking-message');
+                 const img = document.createElement('img'); img.src = 'loading.gif'; img.alt = 'Loading...'; img.classList.add('loading-gif'); messageDiv.appendChild(img);
+                 const textNode = document.createTextNode('Analyzing your Anki Card...'); messageDiv.appendChild(textNode);
+                 messageDiv.dataset.thinkingId = `thinking-${Date.now()}`;
+             } else if (isError) {
+                 messageDiv.classList.add('bot-message', 'error-message');
+                 messageDiv.textContent = text;
+             } else if (type === 'bot') {
+                 messageDiv.classList.add('bot-message');
+                 messageDiv.innerHTML = text;
+             }
+            return messageDiv;
+        }
+
+        function scrollToBottom() { setTimeout(() => { responseOutput.scrollTop = responseOutput.scrollHeight; }, 50); }
+
+        function generateFollowUpButtons(messageElement) {
+            if (messageElement.classList.contains('error-message') || messageElement.classList.contains('initial-message')) { return; }
+            const buttonArea = document.createElement('div');
+            buttonArea.classList.add('follow-up-buttons');
+            const suggestions = ["Explain further", "Give an example"];
+            suggestions.forEach(suggestion => {
+                const button = document.createElement('button'); button.textContent = suggestion;
+                button.onclick = () => {
+                    const oldButtonAreas = responseOutput.querySelectorAll('.follow-up-buttons'); oldButtonAreas.forEach(area => area.remove());
+                    userInput.value = suggestion; handleSend(userInput);
+                };
+                buttonArea.appendChild(button);
+            });
+            messageElement.appendChild(buttonArea); scrollToBottom();
+        }
+
         async function handleSend(inputElement) {
             const inputText = inputElement.value.trim(); if (!inputText) return;
-            
-            // Lese den Schlüssel IMMER aus dem schnellen localStorage vor jeder Anfrage
-            currentApiKey = localStorage.getItem(API_KEY_STORAGE_KEY);
+            const currentApiKey = localStorage.getItem(API_KEY_STORAGE_KEY); // Lese den Schlüssel immer direkt vor der Anfrage
 
-            // Rest der Funktion bleibt größtenteils gleich
-            // ... (Buttons deaktivieren, Thinking-Message anzeigen etc.)
-            const oldButtonAreas = responseOutput.querySelectorAll('.follow-up-buttons');
-            oldButtonAreas.forEach(area => area.remove());
-            // ...
-            
+            // Deaktiviere Eingabefelder
+            const elementsToDisable = [promptInput, goButton, userInput, sendButton];
+            elementsToDisable.forEach(el => el.disabled = true);
+            inputElement.value = '';
+
+            const initialMessage = responseOutput.querySelector('.initial-message');
+            if (initialMessage) { initialMessage.style.display = 'none'; }
+
             const thinkingMsgElement = createMessageElement('', 'bot', true);
             responseOutput.appendChild(thinkingMsgElement);
             scrollToBottom();
@@ -116,7 +329,7 @@
                     body: JSON.stringify({
                         userMessage: inputText,
                         chatHistory: chatHistory,
-                        apiKey: currentApiKey // Sendet den Schlüssel aus dem localStorage
+                        apiKey: currentApiKey
                     })
                 });
                 
@@ -130,18 +343,23 @@
                 }
                 
                 const data = await response.json();
-                if (data.choices && data.choices[0].message) {
+                if (data.choices && data.choices.length > 0 && data.choices[0].message) {
                     const botReply = data.choices[0].message.content;
                     const replyElement = createMessageElement(botReply, 'bot');
                     chatHistory.push({ role: "user", content: inputText });
                     chatHistory.push({ role: "assistant", content: botReply });
-                    if (chatHistory.length > MAX_HISTORY_LENGTH) { chatHistory.slice(-MAX_HISTORY_LENGTH); }
+                    if (chatHistory.length > MAX_HISTORY_LENGTH) { chatHistory = chatHistory.slice(-MAX_HISTORY_LENGTH); }
                     if (currentThinkingElement) { currentThinkingElement.replaceWith(replyElement); generateFollowUpButtons(replyElement); }
-                } // ... restliche Fehlerbehandlung
+                } else {
+                    throw new Error(data.error || 'Unexpected response structure from backend.');
+                }
             } catch (error) {
-                // ...
+                console.error('Communication error:', error);
+                const currentThinkingElement = responseOutput.querySelector(`[data-thinking-id="${thinkingMsgElement.dataset.thinkingId}"]`);
+                const errorElement = createMessageElement(`Communication Error: ${error.message}`, 'bot', false, true);
+                if (currentThinkingElement) { currentThinkingElement.replaceWith(errorElement); }
             } finally {
-                // ... (Buttons wieder aktivieren)
+                elementsToDisable.forEach(el => el.disabled = false);
                 userInput.focus();
                 scrollToBottom();
             }
@@ -150,7 +368,7 @@
         // --- Initialization ---
         function initializeApp() {
             applySavedTheme();
-            updateKeyStatus(); // Überprüft beim Start den Status des Schlüssels
+            updateKeyStatus(); // Überprüft beim Start den Status des Schlüssels aus dem localStorage
             userInput.focus();
         }
 
