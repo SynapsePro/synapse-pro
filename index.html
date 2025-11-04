@@ -1,5 +1,3 @@
---- START OF FILE index.html ---
-
 <!DOCTYPE html>
 <html lang="de">
 <head>
@@ -356,7 +354,14 @@
         function saveApiKey() {
             const key = apiKeyInput.value.trim();
             // Sendet den Befehl und den Schlüssel an den Python-Teil des Add-ons
-            pycmd("synapse_save_key:" + key);
+            // Die `pycmd` Funktion wird von Ankis WebView bereitgestellt
+            if (typeof pycmd !== 'undefined') {
+                pycmd("synapse_save_key:" + key);
+            } else {
+                console.warn("pycmd is not defined. Running in a standard browser?");
+                // Fallback für Testzwecke im normalen Browser
+                onKeySaveResult(true); // Simuliere Erfolg
+            }
         }
 
         // Diese Funktion wird von Python aufgerufen, nachdem der Speicherversuch abgeschlossen ist
@@ -366,14 +371,22 @@
                 keyStatus.style.color = 'green';
                 apiKeyInput.value = ''; // Feld aus Sicherheitsgründen leeren
                 // Fordert den Schlüssel neu an, um die UI und den Zustand zu aktualisieren
-                pycmd("synapse_get_key");
+                if (typeof pycmd !== 'undefined') {
+                    pycmd("synapse_get_key");
+                } else {
+                    onKeyReceived("DUMMY-KEY-FOR-BROWSER"); // Simulierter Empfang
+                }
             } else {
                 keyStatus.textContent = "Save failed.";
                 keyStatus.style.color = 'red';
             }
             setTimeout(() => { 
                 // Status nach ein paar Sekunden zurücksetzen
-                pycmd("synapse_get_key");
+                if (typeof pycmd !== 'undefined') {
+                     pycmd("synapse_get_key");
+                } else {
+                     onKeyReceived(currentApiKey); // UI mit aktuellem Schlüssel aktualisieren
+                }
             }, 3000);
         }
 
@@ -496,7 +509,12 @@
             applySavedTheme();
             userInput.focus();
             // --- NEU: Fragt beim Start den in Anki gespeicherten Schlüssel ab ---
-            pycmd("synapse_get_key");
+            if (typeof pycmd !== 'undefined') {
+                pycmd("synapse_get_key");
+            } else {
+                console.warn("pycmd not defined. Simulating key check.");
+                onKeyReceived(null); // Simuliert, dass kein Schlüssel gefunden wurde
+            }
         }
 
         initializeApp();
