@@ -1,10 +1,11 @@
+--- START OF FILE index.html ---
+
 <!DOCTYPE html>
 <html lang="de">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Synapse Pro - Mixtral Chat</title>
-    <!-- NEU: Import Poppins Font, jetzt auch mit der leichten Schriftart (300) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
@@ -12,372 +13,131 @@
     <style>
         /* --- BASE VARIABLES (Light Mode) --- */
         :root {
-            --body-bg: #F6F6F6;
-            --response-bg: #ffffff;
-            --text-color: #212529;
-            --border-color: #dee2e6;
-            --input-bg: #ffffff;
-            --placeholder-color: #6c757d;
-            --button-send-bg: #0071D3;
-            --button-send-text: #ffffff;
-            --footer-text: #6c757d;
-            --loading-gif-height: 60px;
-            --start-gif-max-width: 100px;
-            --followup-button-bg: #e9ecef;
-            --followup-button-text: #495057;
-            --followup-button-border: #ced4da;
-            --bot-message-border-color: #0071D3;
-            --hidden-color: #F6F6F6;
-            /* UPDATED Highlight Variables - Text Colors Only */
-            --highlight-color-term: #005EB8;
-            --highlight-color-concept: #28a745;
+            --body-bg: #F6F6F6; --response-bg: #ffffff; --text-color: #212529;
+            --border-color: #dee2e6; --input-bg: #ffffff; --placeholder-color: #6c757d;
+            --button-send-bg: #0071D3; --button-send-text: #ffffff; --footer-text: #6c757d;
+            --loading-gif-height: 60px; --start-gif-max-width: 100px;
+            --followup-button-bg: #e9ecef; --followup-button-text: #495057; --followup-button-border: #ced4da;
+            --bot-message-border-color: #0071D3; --hidden-color: #F6F6F6;
+            --highlight-color-term: #005EB8; --highlight-color-concept: #28a745;
         }
-
         /* --- DARK MODE Variables --- */
         [data-theme="dark"] {
-            --body-bg: #212529;
-            --response-bg: rgb(50, 50, 50);
-            --text-color: #f8f9fa;
-            --border-color: #495057;
-            --input-bg: rgb(50, 50, 50);
-            --placeholder-color: #adb5bd;
-            --button-send-bg: #005eb8;
-            --button-send-text: #ffffff;
-            --footer-text: #adb5bd;
-            --followup-button-bg: rgb(50, 50, 50);
-            --followup-button-text: #f8f9fa;
-            --followup-button-border: #6c757d;
-            --bot-message-border-color: #0071D3;
-            --hidden-color: var(--body-bg);
-            /* UPDATED Highlight Variables for Dark Mode */
-            --highlight-color-term: #66bfff;
-            --highlight-color-concept: #52c41a;
+            --body-bg: #212529; --response-bg: rgb(50, 50, 50); --text-color: #f8f9fa;
+            --border-color: #495057; --input-bg: rgb(50, 50, 50); --placeholder-color: #adb5bd;
+            --button-send-bg: #005eb8; --button-send-text: #ffffff; --footer-text: #adb5bd;
+            --followup-button-bg: rgb(50, 50, 50); --followup-button-text: #f8f9fa; --followup-button-border: #6c757d;
+            --bot-message-border-color: #0071D3; --hidden-color: var(--body-bg);
+            --highlight-color-term: #66bfff; --highlight-color-concept: #52c41a;
         }
-
-        /* Keyframes für die Rand-Animation */
-        @keyframes gradient-animation {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
-
+        @keyframes gradient-animation { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
         * { box-sizing: border-box; margin: 0; padding: 0; }
-
-        body {
-            font-family: 'Poppins', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--body-bg);
-            color: var(--text-color);
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
-            overflow: hidden;
-            transition: background-color 0.3s, color 0.3s;
-        }
-
-        /* Obere Prompt-Leiste (Visuell versteckt / Automation) */
-        #prompt-bar {
-            display: flex; align-items: center; padding: 2px 10px;
-            background-color: var(--hidden-color); border-bottom: none;
-            flex-shrink: 0; transition: none;
-        }
-        #prompt-input {
-            flex-grow: 1; padding: 3px 8px; font-size: 0.75em;
-            border: 1px solid var(--hidden-color); border-radius: 3px 0 0 3px;
-            background-color: var(--hidden-color); color: var(--hidden-color);
-            border-right: none; outline: none; box-shadow: none; transition: none;
-        }
+        body { font-family: 'Poppins', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: var(--body-bg); color: var(--text-color); display: flex; flex-direction: column; height: 100vh; overflow: hidden; transition: background-color 0.3s, color 0.3s; }
+        #prompt-bar { display: flex; align-items: center; padding: 2px 10px; background-color: var(--hidden-color); border-bottom: none; flex-shrink: 0; transition: none; }
+        #prompt-input { flex-grow: 1; padding: 3px 8px; font-size: 0.75em; border: 1px solid var(--hidden-color); border-radius: 3px 0 0 3px; background-color: var(--hidden-color); color: var(--hidden-color); border-right: none; outline: none; box-shadow: none; transition: none; }
         #prompt-input::placeholder { color: var(--hidden-color); opacity: 1; }
         #prompt-input:focus { border-color: var(--hidden-color); box-shadow: none; }
-        #go-button {
-            padding: 3px 10px; font-size: 0.75em; font-weight: 600;
-            background-color: var(--hidden-color); color: var(--hidden-color);
-            border: 1px solid var(--hidden-color); border-left: none;
-            border-radius: 0 3px 3px 0; cursor: pointer; white-space: nowrap; transition: none;
-        }
-        #go-button:hover { background-color: var(--hidden-color); opacity: 1; }
-        #prompt-input:disabled, #go-button:disabled {
-            background-color: var(--hidden-color) !important; color: var(--hidden-color) !important;
-            border-color: var(--hidden-color) !important; cursor: not-allowed; opacity: 1;
-        }
-        [data-theme="dark"] #prompt-bar, [data-theme="dark"] #prompt-input, [data-theme="dark"] #go-button {
-            background-color: var(--hidden-color); border-color: var(--hidden-color); color: var(--hidden-color);
-        }
-
-        /* Hauptbereich für Antworten */
-        #response-output {
-            flex-grow: 1; overflow-y: auto; padding: 5px 25px 25px 25px;
-            background-color: var(--body-bg); display: flex;
-            flex-direction: column; transition: background-color 0.3s;
-        }
-
-        /* Allgemeine Bot-Nachricht */
-        .message.bot-message {
-            background-color: var(--response-bg); color: var(--text-color);
-            padding: 15px 20px; border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05); margin-bottom: 20px;
-            max-width: 100%; line-height: 1.6; white-space: pre-wrap;
-            border: 1px solid var(--bot-message-border-color);
-            transition: background-color 0.3s, color 0.3s, border-color 0.3s;
-        }
-        .message.bot-message > *:first-child { margin-top: 0; }
-        .message.bot-message > *:last-child { margin-bottom: 0; }
-
-        [data-theme="dark"] .message.bot-message { box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
-
-        /* Styling für die initiale Nachricht */
-        .message.initial-message {
-            padding: 25px;
-            text-align: center;
-            background-image: url('background.png');
-            background-size: cover;
-            background-position: center;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            min-height: 380px;
-            border: none;
-            position: relative;
-            z-index: 1;
-            overflow: hidden;
-        }
-        /* Pseudo-Element für den animierten Farbverlaufs-Rand */
-        .message.initial-message::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            border-radius: 8px;
-            padding: 6px;
-            background: linear-gradient(45deg, #a3cbff, #c5d4e7, #a3cbff);
-            background-size: 200% 200%;
-            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-            -webkit-mask-composite: xor;
-            mask-composite: exclude;
-            animation: gradient-animation 4s ease infinite;
-            z-index: -1;
-        }
-        .start-gif {
-             display: block; margin: 0 auto 15px auto;
-             max-width: var(--start-gif-max-width); height: auto;
-        }
-        .initial-message .title {
-            font-size: 4.2em; font-weight: 400; color: #ffffff;
-            margin-bottom: 10px; line-height: 1.1;
-        }
-        .initial-message .title span { font-weight: 300; }
-        .initial-message .intro-line {
-             margin-bottom: 0; font-weight: 400; font-size: 0.95em;
-             color: #ffffff; margin-top: 15px;
-         }
-
-        /* Thinking/Loading Styling */
-        .thinking-message {
-            text-align: center; font-style: italic; color: var(--placeholder-color);
-            background-color: transparent; box-shadow: none; border: none;
-            padding: 10px; margin-bottom: 20px; transition: color 0.3s;
-        }
-        .loading-gif {
-            display: block; height: var(--loading-gif-height); width: auto;
-            margin: 0 auto 10px auto;
-        }
-
-        .error-message {
-            background-color: #f8d7da; color: #842029; font-weight: bold;
-            transition: none; border: 1px solid #f5c2c7;
-        }
-        [data-theme="dark"] .error-message {
-             background-color: #842029; color: #f8d7da; border: 1px solid #8f2b36;
-        }
-
-        /* Follow-up Buttons Styling */
-        .follow-up-buttons {
-             margin-top: 15px; padding-top: 10px;
-             border-top: 1px dashed var(--border-color);
-             display: flex; gap: 10px; flex-wrap: wrap;
-        }
-        .follow-up-buttons button {
-            padding: 6px 12px; font-size: 0.9em; border-radius: 15px;
-            border: 1px solid var(--followup-button-border);
-            background-color: var(--followup-button-bg);
-            color: var(--followup-button-text); cursor: pointer;
-            transition: background-color 0.2s, border-color 0.2s;
-        }
-        .follow-up-buttons button:hover { opacity: 0.85; }
-
-        /* Untere Chat-Eingabe (für Nutzer) */
-        #input-area {
-            display: flex; padding: 15px; border-top: 1px solid var(--border-color);
-            background-color: var(--body-bg); flex-shrink: 0;
-            transition: background-color 0.3s, border-color 0.3s;
-        }
-        #user-input {
-            flex-grow: 1; padding: 10px 15px; border: 1px solid var(--border-color);
-            border-radius: 20px; margin-right: 10px; background-color: var(--input-bg);
-            color: var(--text-color); font-size: 1em; resize: none; outline: none;
-            transition: background-color 0.3s, color 0.3s, border-color 0.3s;
-        }
-        #user-input:focus {
-             border-color: #86b7fe; box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
-        }
-         [data-theme="dark"] #user-input:focus {
-              border-color: #4dabf7; box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.35);
-         }
-        #send-button {
-            padding: 10px 20px; background-color: var(--button-send-bg);
-            color: var(--button-send-text); border: none; border-radius: 20px;
-            cursor: pointer; font-size: 1em; font-weight: 600;
-            transition: background-color 0.3s, color 0.3s;
-        }
-        #send-button:hover { opacity: 0.9; }
+        #go-button { padding: 3px 10px; font-size: 0.75em; font-weight: 600; background-color: var(--hidden-color); color: var(--hidden-color); border: 1px solid var(--hidden-color); border-left: none; border-radius: 0 3px 3px 0; cursor: pointer; white-space: nowrap; transition: none; }
+        #prompt-input:disabled, #go-button:disabled { background-color: var(--hidden-color) !important; color: var(--hidden-color) !important; border-color: var(--hidden-color) !important; cursor: not-allowed; opacity: 1; }
+        #response-output { flex-grow: 1; overflow-y: auto; padding: 5px 25px 25px 25px; background-color: var(--body-bg); display: flex; flex-direction: column; transition: background-color 0.3s; }
+        .message.bot-message { background-color: var(--response-bg); color: var(--text-color); padding: 15px 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); margin-bottom: 20px; max-width: 100%; line-height: 1.6; white-space: pre-wrap; border: 1px solid var(--bot-message-border-color); transition: background-color 0.3s, color 0.3s, border-color 0.3s; }
+        .message.bot-message > *:first-child { margin-top: 0; } .message.bot-message > *:last-child { margin-bottom: 0; }
+        .message.initial-message { padding: 25px; text-align: center; background-image: url('background.png'); background-size: cover; background-position: center; display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 380px; border: none; position: relative; z-index: 1; overflow: hidden; }
+        .message.initial-message::before { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; border-radius: 8px; padding: 6px; background: linear-gradient(45deg, #a3cbff, #c5d4e7, #a3cbff); background-size: 200% 200%; -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0); -webkit-mask-composite: xor; mask-composite: exclude; animation: gradient-animation 4s ease infinite; z-index: -1; }
+        .start-gif { display: block; margin: 0 auto 15px auto; max-width: var(--start-gif-max-width); height: auto; }
+        .initial-message .title { font-size: 4.2em; font-weight: 400; color: #ffffff; margin-bottom: 10px; line-height: 1.1; } .initial-message .title span { font-weight: 300; }
+        .initial-message .intro-line { margin-bottom: 0; font-weight: 400; font-size: 0.95em; color: #ffffff; margin-top: 15px; }
+        .thinking-message { text-align: center; font-style: italic; color: var(--placeholder-color); background-color: transparent; box-shadow: none; border: none; padding: 10px; margin-bottom: 20px; transition: color 0.3s; }
+        .loading-gif { display: block; height: var(--loading-gif-height); width: auto; margin: 0 auto 10px auto; }
+        .error-message { background-color: #f8d7da; color: #842029; font-weight: bold; transition: none; border: 1px solid #f5c2c7; }
+        [data-theme="dark"] .error-message { background-color: #842029; color: #f8d7da; border: 1px solid #8f2b36; }
+        #input-area { display: flex; padding: 15px; border-top: 1px solid var(--border-color); background-color: var(--body-bg); flex-shrink: 0; transition: background-color 0.3s, border-color 0.3s; }
+        #user-input { flex-grow: 1; padding: 10px 15px; border: 1px solid var(--border-color); border-radius: 20px; margin-right: 10px; background-color: var(--input-bg); color: var(--text-color); font-size: 1em; resize: none; outline: none; transition: background-color 0.3s, color 0.3s, border-color 0.3s; }
+        #user-input:focus { border-color: #86b7fe; box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25); }
+        [data-theme="dark"] #user-input:focus { border-color: #4dabf7; box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.35); }
+        #send-button { padding: 10px 20px; background-color: var(--button-send-bg); color: var(--button-send-text); border: none; border-radius: 20px; cursor: pointer; font-size: 1em; font-weight: 600; transition: background-color 0.3s, color 0.3s; }
         #send-button:disabled { background-color: #6c757d; cursor: not-allowed; transition: none; }
-        [data-theme="dark"] #send-button:disabled { background-color: #495057; }
-        
-        /* --- NEU: API Key Area Styling --- */
-        #api-key-area {
-            padding: 10px 15px;
-            background-color: var(--response-bg);
-            text-align: center;
-            border-top: 1px solid var(--border-color);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            flex-shrink: 0;
-        }
-        #api-key-input {
-            width: 300px; padding: 5px 8px;
-            border-radius: 5px; border: 1px solid var(--border-color);
-            background-color: var(--input-bg); color: var(--text-color);
-        }
-        #save-key-button {
-            padding: 5px 12px;
-            border-radius: 5px; border: 1px solid var(--button-send-bg);
-            background-color: var(--button-send-bg); color: var(--button-send-text);
-            cursor: pointer;
-        }
+        #api-key-area { padding: 10px 15px; background-color: var(--response-bg); text-align: center; border-top: 1px solid var(--border-color); display: flex; align-items: center; justify-content: center; gap: 8px; flex-shrink: 0; }
+        #api-key-input { width: 300px; padding: 5px 8px; border-radius: 5px; border: 1px solid var(--border-color); background-color: var(--input-bg); color: var(--text-color); }
+        #save-key-button { padding: 5px 12px; border-radius: 5px; border: 1px solid var(--button-send-bg); background-color: var(--button-send-bg); color: var(--button-send-text); cursor: pointer; }
         #key-status { font-size: 0.8em; color: var(--footer-text); min-width: 100px; text-align: left; }
-
-
-        /* Footer Disclaimer */
-        #footer-disclaimer {
-            padding: 10px 20px; display: flex; justify-content: space-between;
-            align-items: center; font-size: 0.75em; color: var(--footer-text);
-            background-color: var(--body-bg); flex-shrink: 0;
-            border-top: 1px solid var(--border-color);
-            transition: background-color 0.3s, color 0.3s, border-color 0.3s;
-        }
-        .darkmode-label { margin-right: 5px; font-size: 0.9em; }
-        .switch { position: relative; display: inline-block; width: 34px; height: 20px; vertical-align: middle; }
-        .switch input { display:none; }
-        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 20px; }
-        .slider:before { position: absolute; content: ""; height: 14px; width: 14px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
-        input:checked + .slider { background-color: #0071D3; }
-        [data-theme="dark"] input:checked + .slider { background-color: #2196F3; }
-        input:checked + .slider:before { transform: translateX(14px); }
-        .footer-toggle-container { display: flex; align-items: center; }
+        #footer-disclaimer { padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; font-size: 0.75em; color: var(--footer-text); background-color: var(--body-bg); flex-shrink: 0; border-top: 1px solid var(--border-color); transition: background-color 0.3s, color 0.3s, border-color 0.3s; }
+        .footer-toggle-container { display: flex; align-items: center; } .darkmode-label { margin-right: 5px; font-size: 0.9em; } .switch { position: relative; display: inline-block; width: 34px; height: 20px; vertical-align: middle; } .switch input { display:none; } .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 20px; } .slider:before { position: absolute; content: ""; height: 14px; width: 14px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; } input:checked + .slider { background-color: #0071D3; } input:checked + .slider:before { transform: translateX(14px); }
     </style>
 </head>
 <body>
-    <!-- Top Prompt Bar (Visually Hidden & Smaller) -->
-    <div id="prompt-bar">
-        <input type="text" id="prompt-input" placeholder="Automation...">
-        <button id="go-button">Go</button>
-    </div>
-
-    <!-- Main Content Area -->
+    <div id="prompt-bar"><input type="text" id="prompt-input" placeholder="Automation..."><button id="go-button">Go</button></div>
     <main id="response-output">
-        <!-- Initial Message -->
         <div class="message bot-message initial-message">
             <img src="start.gif" alt="Start Guide" class="start-gif">
             <h2 class="title">Synapse <span>AI</span></h2>
-            <p class="intro-line">Hey! I am your personal Anki Buddy. Click the buttons above to start, don't forget to select your preferred language.</p>
+            <p class="intro-line">Hey! I am your personal Anki Buddy. Please enter your Pro Key below to start.</p>
         </div>
-        <!-- Dynamic messages will be added here -->
     </main>
-    
-    <!-- NEU: API Key Area -->
     <div id="api-key-area">
         <input type="password" id="api-key-input" placeholder="Enter your Synapse Pro Key...">
         <button id="save-key-button">Save Key</button>
         <span id="key-status"></span>
     </div>
-
-    <!-- User Input Area -->
     <div id="input-area">
-        <input type="text" id="user-input" placeholder="Ask something...">
-        <button id="send-button">Send</button>
+        <input type="text" id="user-input" placeholder="Ask something..."><button id="send-button">Send</button>
     </div>
-
-    <!-- Footer Disclaimer -->
     <footer id="footer-disclaimer">
         <span>The Synapse Pro AI can make mistakes. Please check important Information.</span>
         <div class="footer-toggle-container">
-            <span class="darkmode-label">Darkmode</span>
-            <label class="switch">
-                <input type="checkbox" id="darkmode-toggle">
-                <span class="slider round"></span>
-            </label>
+            <span class="darkmode-label">Darkmode</span><label class="switch"><input type="checkbox" id="darkmode-toggle"><span class="slider round"></span></label>
         </div>
     </footer>
 
     <script>
-        // --- DOM Element References ---
         const responseOutput = document.getElementById('response-output');
         const promptInput = document.getElementById('prompt-input');
         const goButton = document.getElementById('go-button');
         const userInput = document.getElementById('user-input');
         const sendButton = document.getElementById('send-button');
         const darkModeToggle = document.getElementById('darkmode-toggle');
-        // --- NEU: API Key Element References ---
         const apiKeyInput = document.getElementById('api-key-input');
         const saveKeyButton = document.getElementById('save-key-button');
         const keyStatus = document.getElementById('key-status');
 
-        // --- CONFIGURATION ---
-        const BACKEND_API_URL = 'https://synapse-pro.vercel.app/api/chat'; // WICHTIG: Deine Vercel URL
+        const BACKEND_API_URL = 'https://synapse-pro.vercel.app/api/chat';
         const MAX_HISTORY_LENGTH = 10;
-
-        // --- Global State ---
         let chatHistory = [];
-        let currentApiKey = null; // Hier speichern wir den geladenen Schlüssel
+        let currentApiKey = null;
 
-        // --- Event Listeners ---
         goButton.addEventListener('click', () => handleSend(promptInput));
         promptInput.addEventListener('keypress', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(promptInput); } });
         sendButton.addEventListener('click', () => handleSend(userInput));
         userInput.addEventListener('keypress', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(userInput); } });
         darkModeToggle.addEventListener('change', toggleTheme);
-        // --- NEU: Event Listener für API Key ---
         saveKeyButton.addEventListener('click', saveApiKey);
 
-        // --- NEU: Funktionen zur Kommunikation mit Python ---
         function saveApiKey() {
             const key = apiKeyInput.value.trim();
-            // Sendet den Befehl und den Schlüssel an den Python-Teil des Add-ons
-            pycmd("synapse_save_key:" + key);
+            if (typeof pycmd === 'function') {
+                pycmd("synapse_save_key:" + key);
+            } else {
+                console.error("pycmd is not defined. Are you running this outside of Anki?");
+                keyStatus.textContent = "Error: Not in Anki.";
+                keyStatus.style.color = 'red';
+            }
         }
 
-        // Diese Funktion wird von Python aufgerufen, nachdem der Speicherversuch abgeschlossen ist
         function onKeySaveResult(success) {
             if (success) {
                 keyStatus.textContent = "Key saved!";
                 keyStatus.style.color = 'green';
-                apiKeyInput.value = ''; // Feld aus Sicherheitsgründen leeren
-                // Fordert den Schlüssel neu an, um die UI und den Zustand zu aktualisieren
+                apiKeyInput.value = '';
                 pycmd("synapse_get_key");
             } else {
                 keyStatus.textContent = "Save failed.";
                 keyStatus.style.color = 'red';
             }
-            setTimeout(() => { 
-                // Status nach ein paar Sekunden zurücksetzen
-                pycmd("synapse_get_key");
-            }, 3000);
+            setTimeout(() => { pycmd("synapse_get_key"); }, 3000);
         }
 
-        // Diese Funktion wird von Python aufgerufen und liefert den gespeicherten Schlüssel
         function onKeyReceived(key) {
-            currentApiKey = key; // Speichert den Schlüssel in unserer globalen Variable
+            currentApiKey = key;
             if (key) {
                 keyStatus.textContent = "Pro Key active.";
                 keyStatus.style.color = 'green';
@@ -387,14 +147,11 @@
             }
         }
         
-        // --- Bestehende Funktionen ---
         function toggleTheme() {
-             if (darkModeToggle.checked) { document.documentElement.setAttribute('data-theme', 'dark'); }
-             else { document.documentElement.removeAttribute('data-theme'); }
+             if (darkModeToggle.checked) { document.documentElement.setAttribute('data-theme', 'dark'); localStorage.setItem('theme', 'dark'); }
+             else { document.documentElement.removeAttribute('data-theme'); localStorage.setItem('theme', 'light'); }
         }
         function applySavedTheme() {
-            // Hinweis: Diese Funktion verwendet localStorage. Die Darkmode-Einstellung wird nicht
-            // über Anki-Profile hinweg synchronisiert. Dies kann bei Bedarf angepasst werden.
             const savedTheme = localStorage.getItem('theme');
             if (savedTheme === 'dark') { darkModeToggle.checked = true; document.documentElement.setAttribute('data-theme', 'dark'); }
             else { darkModeToggle.checked = false; document.documentElement.removeAttribute('data-theme'); }
@@ -403,7 +160,6 @@
         function createMessageElement(text, type = 'bot', isThinking = false, isError = false) {
              const messageDiv = document.createElement('div');
              messageDiv.classList.add('message');
-
              if (isThinking) {
                  messageDiv.classList.add('thinking-message');
                  const img = document.createElement('img'); img.src = 'loading.gif'; img.alt = 'Loading...'; img.classList.add('loading-gif'); messageDiv.appendChild(img);
@@ -421,64 +177,50 @@
 
         function scrollToBottom() { setTimeout(() => { responseOutput.scrollTop = responseOutput.scrollHeight; }, 50); }
 
-        function generateFollowUpButtons(messageElement) {
-            if (messageElement.classList.contains('error-message') || messageElement.classList.contains('initial-message')) { return; }
-            const buttonArea = document.createElement('div');
-            buttonArea.classList.add('follow-up-buttons');
-            const suggestions = ["Explain further", "Give an example"];
-            suggestions.forEach(suggestion => {
-                const button = document.createElement('button'); button.textContent = suggestion;
-                button.onclick = () => {
-                    const oldButtonAreas = responseOutput.querySelectorAll('.follow-up-buttons'); oldButtonAreas.forEach(area => area.remove());
-                    userInput.value = suggestion; handleSend(userInput);
-                };
-                buttonArea.appendChild(button);
-            });
-            messageElement.appendChild(buttonArea); scrollToBottom();
-        }
-
         async function handleSend(inputElement) {
             const inputText = inputElement.value.trim(); if (!inputText) return;
-            const oldButtonAreas = responseOutput.querySelectorAll('.follow-up-buttons'); oldButtonAreas.forEach(area => area.remove());
             promptInput.disabled = true; goButton.disabled = true; userInput.disabled = true; sendButton.disabled = true; inputElement.value = '';
-
             const initialMessage = responseOutput.querySelector('.initial-message');
-            if (initialMessage && initialMessage.style.display !== 'none') {
-                 initialMessage.style.display = 'none';
-            }
-
+            if (initialMessage) { initialMessage.style.display = 'none'; }
             const thinkingMsgElement = createMessageElement('', 'bot', true); responseOutput.appendChild(thinkingMsgElement); scrollToBottom();
 
             try {
                 const response = await fetch(BACKEND_API_URL, {
                     method: 'POST', headers: { 'Content-Type': 'application/json' },
-                    // --- WICHTIGE ÄNDERUNG: Sendet den API-Schlüssel mit ---
-                    body: JSON.stringify({ 
-                        userMessage: inputText, 
-                        chatHistory: chatHistory,
-                        apiKey: currentApiKey 
-                    })
+                    body: JSON.stringify({ userMessage: inputText, chatHistory: chatHistory, apiKey: currentApiKey })
                 });
                 const currentThinkingElement = responseOutput.querySelector(`[data-thinking-id="${thinkingMsgElement.dataset.thinkingId}"]`);
+                
+                // --- WICHTIGE ÄNDERUNG: Bessere Fehlerbehandlung ---
                 if (!response.ok) {
-                    const errorData = await response.json().catch(() => ({ error: `Backend Error: ${response.statusText}` }));
-                    console.error('Backend/API Error:', response.status, errorData); 
-                    const errorMessage = `${errorData.error || response.statusText}`; // Zeigt die Fehlermeldung vom Backend an
+                    let errorMessage = `Error ${response.status}: ${response.statusText}`;
+                    try {
+                        const errorData = await response.json();
+                        // Nimmt die spezifische Fehlermeldung vom Backend, falls vorhanden
+                        if (errorData && errorData.error) {
+                            errorMessage = errorData.error;
+                        }
+                    } catch (e) { /* JSON-Parsing fehlgeschlagen, benutze den Standard-Fehlertext */ }
+                    
+                    console.error('Backend/API Error:', errorMessage);
                     const errorElement = createMessageElement(errorMessage, 'bot', false, true);
-                    if (currentThinkingElement) { currentThinkingElement.replaceWith(errorElement); } else { responseOutput.appendChild(errorElement); } return;
+                    if (currentThinkingElement) { currentThinkingElement.replaceWith(errorElement); } else { responseOutput.appendChild(errorElement); } 
+                    return;
                 }
+
                 const data = await response.json();
                 if (data.choices && data.choices.length > 0 && data.choices[0].message) {
-                    const botReply = data.choices[0].message.content; // Should be HTML
+                    const botReply = data.choices[0].message.content;
                     const replyElement = createMessageElement(botReply, 'bot');
                     chatHistory.push({ role: "user", content: inputText }); chatHistory.push({ role: "assistant", content: botReply });
                     if (chatHistory.length > MAX_HISTORY_LENGTH) { chatHistory = chatHistory.slice(-MAX_HISTORY_LENGTH); }
-                    if (currentThinkingElement) { currentThinkingElement.replaceWith(replyElement); generateFollowUpButtons(replyElement); }
-                    else { responseOutput.appendChild(replyElement); generateFollowUpButtons(replyElement); }
+                    if (currentThinkingElement) { currentThinkingElement.replaceWith(replyElement); }
+                    else { responseOutput.appendChild(replyElement); }
                 } else if (data.error) {
                      const errorElement = createMessageElement(`Backend Error: ${data.error}`, 'bot', false, true);
-                     if (currentThinkingElement) { currentThinkingElement.replaceWith(errorElement); } else { responseOutput.appendChild(errorElement); } return;
+                     if (currentThinkingElement) { currentThinkingElement.replaceWith(errorElement); } else { responseOutput.appendChild(errorElement); }
                 } else { throw new Error('Unexpected response structure from backend.'); }
+
             } catch (error) {
                 console.error('Communication error with backend:', error);
                 const currentThinkingElement = responseOutput.querySelector(`[data-thinking-id="${thinkingMsgElement.dataset.thinkingId}"]`);
@@ -489,16 +231,17 @@
             }
         }
 
-        // --- Initialization ---
         function initializeApp() {
             applySavedTheme();
             userInput.focus();
-            // --- NEU: Fragt beim Start den in Anki gespeicherten Schlüssel ab ---
-            pycmd("synapse_get_key");
+            if (typeof pycmd === 'function') {
+                pycmd("synapse_get_key");
+            } else {
+                console.warn("pycmd not found. Running in browser mode.");
+                keyStatus.textContent = "Browser Mode";
+            }
         }
-
         initializeApp();
-
     </script>
 </body>
 </html>
