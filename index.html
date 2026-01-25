@@ -7,7 +7,7 @@
     <!-- Import Poppins Font -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
     <style>
         /* --- BASE VARIABLES (Light Mode) --- */
@@ -22,14 +22,12 @@
             --button-send-text: #ffffff;
             --footer-text: #6c757d;
             --loading-gif-height: 60px;
-            --start-gif-max-width: 100px;
+            --start-gif-max-width: 80px; /* Etwas kleiner für das Card-Design */
             --followup-button-bg: #e9ecef;
             --followup-button-text: #495057;
             --followup-button-border: #ced4da;
             --bot-message-border-color: #0071D3;
             --hidden-color: #F6F6F6;
-            --highlight-color-term: #005EB8;
-            --highlight-color-concept: #28a745;
         }
 
         /* --- DARK MODE Variables --- */
@@ -46,16 +44,7 @@
             --followup-button-bg: rgb(50, 50, 50);
             --followup-button-text: #f8f9fa;
             --followup-button-border: #6c757d;
-            --bot-message-border-color: #0071D3;
             --hidden-color: var(--body-bg);
-            --highlight-color-term: #66bfff;
-            --highlight-color-concept: #52c41a;
-        }
-
-        @keyframes gradient-animation {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -102,7 +91,7 @@
 
         /* Hauptbereich für Antworten */
         #response-output {
-            flex-grow: 1; overflow-y: auto; padding: 5px 25px 25px 25px;
+            flex-grow: 1; overflow-y: auto; padding: 20px;
             background-color: var(--body-bg); display: flex;
             flex-direction: column; transition: background-color 0.3s;
         }
@@ -121,73 +110,106 @@
             padding: 15px 20px; border-radius: 8px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.05);
             border: 1px solid var(--bot-message-border-color);
-            align-self: flex-start; /* Links ausrichten */
+            align-self: flex-start;
             width: 100%;
         }
-        .message.bot-message > *:first-child { margin-top: 0; }
-        .message.bot-message > *:last-child { margin-bottom: 0; }
         [data-theme="dark"] .message.bot-message { box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
 
-        /* NEU: User Nachricht Styling (Manuelle Frage) */
+        /* User Nachricht Styling */
         .message.user-message {
             background-color: var(--button-send-bg);
             color: var(--button-send-text);
             padding: 10px 20px;
             border-radius: 20px 20px 0 20px;
-            align-self: flex-end; /* Rechts ausrichten */
-            margin-left: auto; /* Nach rechts schieben */
+            align-self: flex-end;
+            margin-left: auto;
             max-width: 80%;
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
             border: none;
         }
 
-        /* Styling für die initiale Nachricht */
+        /* --- NEUES START SCREEN STYLING (Card Style) --- */
+        
+        @keyframes border-shimmer {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
         .message.initial-message {
-            padding: 25px;
+            position: relative;
+            background-color: #ffffff; /* Immer Weiß wie gewünscht */
+            border-radius: 30px; /* Stärker abgerundet */
+            padding: 40px 30px;
             text-align: center;
-            background-image: url('background.png');
-            background-size: cover;
-            background-position: center;
             display: flex;
             flex-direction: column;
-            justify-content: center;
             align-items: center;
-            min-height: 380px;
+            justify-content: center;
+            margin: 20px auto;
+            max-width: 400px; /* Begrenzte Breite für Card-Look */
+            width: 100%;
+            min-height: auto;
             border: none;
-            position: relative;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
             z-index: 1;
-            overflow: hidden;
+            isolation: isolate;
         }
+
+        /* Der schimmernde Rand (Pseudo-Element) */
         .message.initial-message::before {
             content: '';
             position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            border-radius: 8px;
-            padding: 6px;
-            background: linear-gradient(45deg, #a3cbff, #c5d4e7, #a3cbff);
+            inset: -4px; /* Mitteldicker Rand (4px) */
+            border-radius: 34px; /* Radius Box (30) + Rand (4) */
+            background: linear-gradient(135deg, #0071D3, #E1EFFF, #0071D3);
             background-size: 200% 200%;
-            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-            -webkit-mask-composite: xor;
-            mask-composite: exclude;
-            animation: gradient-animation 4s ease infinite;
             z-index: -1;
+            animation: border-shimmer 3s linear infinite;
         }
+
+        /* GIF */
         .start-gif {
-             display: block; margin: 0 auto 15px auto;
+             display: block; margin: 0 auto 20px auto;
              max-width: var(--start-gif-max-width); height: auto;
         }
+
+        /* SynapsePro AI Title */
         .initial-message .title {
-            font-size: 4.2em; font-weight: 400; color: #ffffff;
-            margin-bottom: 10px; line-height: 1.1;
+            font-size: 2.2em; 
+            font-weight: 700; 
+            margin: 0 0 5px 0;
+            line-height: 1.2;
+            /* Gradient Text */
+            background: linear-gradient(90deg, #0071D3 0%, #7CC2FF 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
-        .initial-message .title span { font-weight: 300; }
+
+        /* "Let’s understand further!" */
+        .initial-message .subtitle {
+            font-size: 1.1em;
+            font-weight: 600;
+            color: #D3D3D3;
+            margin-bottom: 25px;
+        }
+
+        /* Description Text */
         .initial-message .intro-line {
-             margin-bottom: 0; font-weight: 400; font-size: 0.95em;
-             color: #ffffff; margin-top: 15px;
-         }
-        .initial-message .intro-line.error {
-            color: #ffdddd; font-weight: 600; background-color: rgba(0,0,0,0.3); padding: 5px 10px; border-radius: 5px;
+             margin: 0; 
+             font-weight: 500; 
+             font-size: 0.85em;
+             color: #848484; 
+             line-height: 1.5;
         }
+
+        /* Error state in intro */
+        .initial-message .intro-line.error {
+            color: #ff4d4f; margin-top: 10px;
+        }
+
+        /* --- ENDE START SCREEN STYLING --- */
 
         /* Thinking/Loading Styling */
         .thinking-message {
@@ -280,11 +302,16 @@
 
     <!-- Main Content Area -->
     <main id="response-output">
-        <!-- Initial Message -->
+        <!-- Initial Message (New Layout) -->
         <div class="message bot-message initial-message">
             <img src="start.gif" alt="Start Guide" class="start-gif">
-            <h2 class="title">Synapse <span>AI</span></h2>
-            <p class="intro-line">Hey! I am your personal Anki Buddy. Click the buttons above to start, don't forget to select your preferred language.</p>
+            <h2 class="title">SynapsePro AI</h2>
+            <div class="subtitle">Let’s understand further!</div>
+            <p class="intro-line">
+                Hey! I am your personal Anki Assistant.<br>
+                Click the buttons above to start, don’t forget<br>
+                to select your preferred language.
+            </p>
         </div>
         <!-- Dynamic messages will be added here -->
     </main>
@@ -342,7 +369,6 @@
         }
 
         // Aktualisierte createMessageElement Funktion
-        // Nimmt nun customThinkingText entgegen, um den Ladetext zu ändern
         function createMessageElement(text, type = 'bot', isThinking = false, isError = false, customThinkingText = 'Analyzing your Anki Card...') {
              const messageDiv = document.createElement('div');
              messageDiv.classList.add('message');
@@ -359,7 +385,6 @@
                  messageDiv.classList.add('bot-message');
                  messageDiv.innerHTML = text;
              } else if (type === 'user') {
-                 // NEU: Styling für User Nachrichten
                  messageDiv.classList.add('user-message');
                  messageDiv.textContent = text;
              }
@@ -388,7 +413,6 @@
             const inputText = inputElement.value.trim(); if (!inputText) return;
             const oldButtonAreas = responseOutput.querySelectorAll('.follow-up-buttons'); oldButtonAreas.forEach(area => area.remove());
             
-            // Erkennung der Quelle
             const isManualInput = (inputElement.id === 'user-input');
 
             // UI Sperren
@@ -399,14 +423,12 @@
                  initialMessage.style.display = 'none';
             }
 
-            // NEU: Nur wenn es manuell ist, zeigen wir die User-Blase an
             if (isManualInput) {
                 const userMessageElement = createMessageElement(inputText, 'user');
                 responseOutput.appendChild(userMessageElement);
                 scrollToBottom();
             }
 
-            // NEU: Lade-Text basierend auf Quelle
             const thinkingText = isManualInput ? "Thinking..." : "Analyzing your Anki Card...";
             const thinkingMsgElement = createMessageElement('', 'bot', true, false, thinkingText); 
             responseOutput.appendChild(thinkingMsgElement); 
@@ -439,7 +461,6 @@
                     const botReply = data.choices[0].message.content; 
                     const replyElement = createMessageElement(botReply, 'bot');
                     
-                    // History wird immer aktualisiert, egal ob manuell oder automatisch
                     chatHistory.push({ role: "user", content: inputText }); chatHistory.push({ role: "assistant", content: botReply });
                     if (chatHistory.length > MAX_HISTORY_LENGTH) { chatHistory = chatHistory.slice(-MAX_HISTORY_LENGTH); }
                     
@@ -470,8 +491,10 @@
                     const initialMessage = document.querySelector('.initial-message');
                     if (initialMessage) {
                         const introLine = initialMessage.querySelector('.intro-line');
-                        introLine.textContent = "License key is missing. Please restart Anki and enter your key when prompted.";
-                        introLine.classList.add('error');
+                        if (introLine) {
+                            introLine.textContent = "License key is missing. Please restart Anki and enter your key when prompted.";
+                            introLine.classList.add('error');
+                        }
                     }
                     userInput.disabled = true;
                     sendButton.disabled = true;
