@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Synapse Pro - Mixtral Chat</title>
-    <!-- NEU: Import Poppins Font, jetzt auch mit der leichten Schriftart (300) -->
+    <!-- Import Poppins Font -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
@@ -28,7 +28,6 @@
             --followup-button-border: #ced4da;
             --bot-message-border-color: #0071D3;
             --hidden-color: #F6F6F6;
-            /* UPDATED Highlight Variables - Text Colors Only */
             --highlight-color-term: #005EB8;
             --highlight-color-concept: #28a745;
         }
@@ -49,12 +48,10 @@
             --followup-button-border: #6c757d;
             --bot-message-border-color: #0071D3;
             --hidden-color: var(--body-bg);
-            /* UPDATED Highlight Variables for Dark Mode */
             --highlight-color-term: #66bfff;
             --highlight-color-concept: #52c41a;
         }
 
-        /* Keyframes für die Rand-Animation */
         @keyframes gradient-animation {
             0% { background-position: 0% 50%; }
             50% { background-position: 100% 50%; }
@@ -110,19 +107,39 @@
             flex-direction: column; transition: background-color 0.3s;
         }
 
+        .message {
+            margin-bottom: 20px;
+            max-width: 100%;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+        }
+
         /* Allgemeine Bot-Nachricht */
         .message.bot-message {
             background-color: var(--response-bg); color: var(--text-color);
             padding: 15px 20px; border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05); margin-bottom: 20px;
-            max-width: 100%; line-height: 1.6; white-space: pre-wrap;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
             border: 1px solid var(--bot-message-border-color);
-            transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+            align-self: flex-start; /* Links ausrichten */
+            width: 100%;
         }
         .message.bot-message > *:first-child { margin-top: 0; }
         .message.bot-message > *:last-child { margin-bottom: 0; }
-
         [data-theme="dark"] .message.bot-message { box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+
+        /* NEU: User Nachricht Styling (Manuelle Frage) */
+        .message.user-message {
+            background-color: var(--button-send-bg);
+            color: var(--button-send-text);
+            padding: 10px 20px;
+            border-radius: 20px 20px 0 20px;
+            align-self: flex-end; /* Rechts ausrichten */
+            margin-left: auto; /* Nach rechts schieben */
+            max-width: 80%;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            border: none;
+        }
 
         /* Styling für die initiale Nachricht */
         .message.initial-message {
@@ -141,7 +158,6 @@
             z-index: 1;
             overflow: hidden;
         }
-        /* Pseudo-Element für den animierten Farbverlaufs-Rand */
         .message.initial-message::before {
             content: '';
             position: absolute;
@@ -178,6 +194,7 @@
             text-align: center; font-style: italic; color: var(--placeholder-color);
             background-color: transparent; box-shadow: none; border: none;
             padding: 10px; margin-bottom: 20px; transition: color 0.3s;
+            width: 100%;
         }
         .loading-gif {
             display: block; height: var(--loading-gif-height); width: auto;
@@ -234,8 +251,6 @@
         #send-button:hover { opacity: 0.9; }
         #send-button:disabled { background-color: #6c757d; cursor: not-allowed; transition: none; }
         [data-theme="dark"] #send-button:disabled { background-color: #495057; }
-        
-        /* --- ENTFERNT: API Key Area Styling --- */
 
         /* Footer Disclaimer */
         #footer-disclaimer {
@@ -274,8 +289,6 @@
         <!-- Dynamic messages will be added here -->
     </main>
     
-    <!-- --- ENTFERNT: API Key Area --- -->
-    
     <!-- User Input Area -->
     <div id="input-area">
         <input type="text" id="user-input" placeholder="Ask something...">
@@ -302,15 +315,13 @@
         const userInput = document.getElementById('user-input');
         const sendButton = document.getElementById('send-button');
         const darkModeToggle = document.getElementById('darkmode-toggle');
-        // --- ENTFERNT: API Key Element References ---
 
         // --- CONFIGURATION ---
-        const BACKEND_API_URL = 'https://synapse-pro.vercel.app/api/chat'; // WICHTIG: Deine Vercel URL
+        const BACKEND_API_URL = 'https://synapse-pro.vercel.app/api/chat'; 
         const MAX_HISTORY_LENGTH = 10;
 
         // --- Global State ---
         let chatHistory = [];
-        // --- ENTFERNT: Globale `currentApiKey` Variable. Wir lesen direkt aus `window`.
 
         // --- Event Listeners ---
         goButton.addEventListener('click', () => handleSend(promptInput));
@@ -318,32 +329,28 @@
         sendButton.addEventListener('click', () => handleSend(userInput));
         userInput.addEventListener('keypress', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(userInput); } });
         darkModeToggle.addEventListener('change', toggleTheme);
-        // --- ENTFERNT: Event Listener für API Key ---
 
-        // --- ENTFERNT: Funktionen zur Kommunikation mit Python (pycmd) ---
-        // Die Lizenzschlüssel-Logik wird nun komplett vom Python-Teil gesteuert.
-        
-        // --- Bestehende Funktionen ---
+        // --- Funktionen ---
         function toggleTheme() {
              if (darkModeToggle.checked) { document.documentElement.setAttribute('data-theme', 'dark'); }
              else { document.documentElement.removeAttribute('data-theme'); }
         }
         function applySavedTheme() {
-            // Hinweis: Diese Funktion verwendet localStorage. Die Darkmode-Einstellung wird nicht
-            // über Anki-Profile hinweg synchronisiert. Dies kann bei Bedarf angepasst werden.
             const savedTheme = localStorage.getItem('theme');
             if (savedTheme === 'dark') { darkModeToggle.checked = true; document.documentElement.setAttribute('data-theme', 'dark'); }
             else { darkModeToggle.checked = false; document.documentElement.removeAttribute('data-theme'); }
         }
 
-        function createMessageElement(text, type = 'bot', isThinking = false, isError = false) {
+        // Aktualisierte createMessageElement Funktion
+        // Nimmt nun customThinkingText entgegen, um den Ladetext zu ändern
+        function createMessageElement(text, type = 'bot', isThinking = false, isError = false, customThinkingText = 'Analyzing your Anki Card...') {
              const messageDiv = document.createElement('div');
              messageDiv.classList.add('message');
 
              if (isThinking) {
                  messageDiv.classList.add('thinking-message');
                  const img = document.createElement('img'); img.src = 'loading.gif'; img.alt = 'Loading...'; img.classList.add('loading-gif'); messageDiv.appendChild(img);
-                 const textNode = document.createTextNode('Analyzing your Anki Card...'); messageDiv.appendChild(textNode);
+                 const textNode = document.createTextNode(customThinkingText); messageDiv.appendChild(textNode);
                  messageDiv.dataset.thinkingId = `thinking-${Date.now()}`;
              } else if (isError) {
                  messageDiv.classList.add('bot-message', 'error-message');
@@ -351,6 +358,10 @@
              } else if (type === 'bot') {
                  messageDiv.classList.add('bot-message');
                  messageDiv.innerHTML = text;
+             } else if (type === 'user') {
+                 // NEU: Styling für User Nachrichten
+                 messageDiv.classList.add('user-message');
+                 messageDiv.textContent = text;
              }
             return messageDiv;
         }
@@ -376,6 +387,11 @@
         async function handleSend(inputElement) {
             const inputText = inputElement.value.trim(); if (!inputText) return;
             const oldButtonAreas = responseOutput.querySelectorAll('.follow-up-buttons'); oldButtonAreas.forEach(area => area.remove());
+            
+            // Erkennung der Quelle
+            const isManualInput = (inputElement.id === 'user-input');
+
+            // UI Sperren
             promptInput.disabled = true; goButton.disabled = true; userInput.disabled = true; sendButton.disabled = true; inputElement.value = '';
 
             const initialMessage = responseOutput.querySelector('.initial-message');
@@ -383,11 +399,20 @@
                  initialMessage.style.display = 'none';
             }
 
-            const thinkingMsgElement = createMessageElement('', 'bot', true); responseOutput.appendChild(thinkingMsgElement); scrollToBottom();
+            // NEU: Nur wenn es manuell ist, zeigen wir die User-Blase an
+            if (isManualInput) {
+                const userMessageElement = createMessageElement(inputText, 'user');
+                responseOutput.appendChild(userMessageElement);
+                scrollToBottom();
+            }
+
+            // NEU: Lade-Text basierend auf Quelle
+            const thinkingText = isManualInput ? "Thinking..." : "Analyzing your Anki Card...";
+            const thinkingMsgElement = createMessageElement('', 'bot', true, false, thinkingText); 
+            responseOutput.appendChild(thinkingMsgElement); 
+            scrollToBottom();
 
             try {
-                // --- WICHTIGE ÄNDERUNG: Liest den Lizenzschlüssel direkt aus dem `window`-Objekt,
-                // wo er vom Python-Addon per JavaScript-Injection platziert wird.
                 const licenseKey = window.__licenseKey || null;
 
                 const response = await fetch(BACKEND_API_URL, {
@@ -395,14 +420,13 @@
                     body: JSON.stringify({ 
                         userMessage: inputText, 
                         chatHistory: chatHistory,
-                        apiKey: licenseKey // Sendet den injizierten Schlüssel mit
+                        apiKey: licenseKey 
                     })
                 });
                 const currentThinkingElement = responseOutput.querySelector(`[data-thinking-id="${thinkingMsgElement.dataset.thinkingId}"]`);
                 if (!response.ok) {
                     const errorData = await response.json().catch(() => ({ error: `Backend Error: ${response.statusText}` }));
                     console.error('Backend/API Error:', response.status, errorData); 
-                    // Angepasste Fehlermeldung, wenn der Schlüssel fehlt oder ungültig ist
                     let errorMessage = `${errorData.error || response.statusText}`;
                     if (response.status === 401 || response.status === 403) {
                          errorMessage = "Authorization failed. Your Synapse Pro Key might be invalid or missing. Please restart Anki to re-enter it.";
@@ -412,10 +436,13 @@
                 }
                 const data = await response.json();
                 if (data.choices && data.choices.length > 0 && data.choices[0].message) {
-                    const botReply = data.choices[0].message.content; // Should be HTML
+                    const botReply = data.choices[0].message.content; 
                     const replyElement = createMessageElement(botReply, 'bot');
+                    
+                    // History wird immer aktualisiert, egal ob manuell oder automatisch
                     chatHistory.push({ role: "user", content: inputText }); chatHistory.push({ role: "assistant", content: botReply });
                     if (chatHistory.length > MAX_HISTORY_LENGTH) { chatHistory = chatHistory.slice(-MAX_HISTORY_LENGTH); }
+                    
                     if (currentThinkingElement) { currentThinkingElement.replaceWith(replyElement); generateFollowUpButtons(replyElement); }
                     else { responseOutput.appendChild(replyElement); generateFollowUpButtons(replyElement); }
                 } else if (data.error) {
@@ -437,9 +464,6 @@
             applySavedTheme();
             userInput.focus();
             
-            // --- NEU: Bonus-Funktion - Prüfung auf den injizierten Lizenzschlüssel ---
-            // Wir warten einen kurzen Moment, um sicherzustellen, dass der Python-Code
-            // Zeit hatte, den Schlüssel zu injizieren.
             setTimeout(() => {
                 if (typeof window.__licenseKey === 'undefined' || !window.__licenseKey) {
                     console.warn("License key not found in window.__licenseKey.");
@@ -449,14 +473,13 @@
                         introLine.textContent = "License key is missing. Please restart Anki and enter your key when prompted.";
                         introLine.classList.add('error');
                     }
-                    // Deaktiviere die Eingabefelder, da ohne Schlüssel keine Anfragen möglich sind.
                     userInput.disabled = true;
                     sendButton.disabled = true;
                     userInput.placeholder = "License key required to operate.";
                 } else {
                      console.log("License key successfully detected.");
                 }
-            }, 1500); // 1.5 Sekunden Verzögerung als Sicherheitsmarge
+            }, 1500); 
         }
 
         initializeApp();
