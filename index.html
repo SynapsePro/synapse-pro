@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Synapse Pro - Mixtral Chat</title>
+    <title>Synapse Pro - AI Chat</title>
     <!-- Import Poppins Font -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -13,14 +13,10 @@
         /* --- BASE VARIABLES (Light Mode) --- */
         :root {
             --body-bg: #ffffff;
-            
-            /* ÄNDERUNG: Dezent hellgrauer Hintergrund für KI-Antworten und Eingabefeld */
             --response-bg: #f5f5f5; 
             --input-bg: #f5f5f5;
-            
             --text-color: #212529;
             --border-color: #dee2e6;
-            
             --placeholder-color: #6c757d;
             --button-send-bg: #0071D3;
             --button-send-text: #ffffff;
@@ -34,6 +30,10 @@
             --hidden-color: #ffffff; 
             --highlight-color-term: #005EB8;
             --highlight-color-concept: #28a745;
+            
+            /* Accordion Specifics */
+            --accordion-header-bg: rgba(0,0,0,0.03);
+            --accordion-header-hover: rgba(0,0,0,0.06);
         }
 
         /* --- DARK MODE Variables --- */
@@ -54,6 +54,10 @@
             --hidden-color: var(--body-bg);
             --highlight-color-term: #66bfff;
             --highlight-color-concept: #52c41a;
+
+            /* Accordion Dark Mode */
+            --accordion-header-bg: rgba(255,255,255,0.05);
+            --accordion-header-hover: rgba(255,255,255,0.1);
         }
 
         @keyframes gradient-animation {
@@ -68,13 +72,9 @@
         body::before {
             content: '';
             position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 1px;
+            top: 0; left: 0; right: 0; height: 1px;
             background-color: #d4d4d4;
-            z-index: 10000; 
-            pointer-events: none; 
+            z-index: 10000; pointer-events: none; 
         }
 
         body {
@@ -92,8 +92,7 @@
         #prompt-bar {
             display: flex; align-items: center; padding: 2px 10px;
             background-color: var(--hidden-color); border-bottom: none;
-            flex-shrink: 0; transition: none;
-            padding-top: 3px; 
+            flex-shrink: 0; transition: none; padding-top: 3px; 
         }
         #prompt-input {
             flex-grow: 1; padding: 3px 8px; font-size: 0.75em;
@@ -101,18 +100,11 @@
             background-color: var(--hidden-color); color: var(--hidden-color);
             border-right: none; outline: none; box-shadow: none; transition: none;
         }
-        #prompt-input::placeholder { color: var(--hidden-color); opacity: 1; }
-        #prompt-input:focus { border-color: var(--hidden-color); box-shadow: none; }
         #go-button {
             padding: 3px 10px; font-size: 0.75em; font-weight: 600;
             background-color: var(--hidden-color); color: var(--hidden-color);
             border: 1px solid var(--hidden-color); border-left: none;
             border-radius: 0 3px 3px 0; cursor: pointer; white-space: nowrap; transition: none;
-        }
-        #go-button:hover { background-color: var(--hidden-color); opacity: 1; }
-        #prompt-input:disabled, #go-button:disabled {
-            background-color: var(--hidden-color) !important; color: var(--hidden-color) !important;
-            border-color: var(--hidden-color) !important; cursor: not-allowed; opacity: 1;
         }
         [data-theme="dark"] #prompt-bar, [data-theme="dark"] #prompt-input, [data-theme="dark"] #go-button {
             background-color: var(--hidden-color); border-color: var(--hidden-color); color: var(--hidden-color);
@@ -129,7 +121,7 @@
             margin-bottom: 20px;
             max-width: 100%;
             line-height: 1.6;
-            white-space: pre-wrap;
+            white-space: pre-wrap; /* Wichtig für normale Textnachrichten */
             transition: background-color 0.3s, color 0.3s, border-color 0.3s;
         }
 
@@ -139,110 +131,129 @@
             padding: 15px 20px; border-radius: 8px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.05);
             border: 1px solid var(--bot-message-border-color);
-            align-self: flex-start; /* Links ausrichten */
+            align-self: flex-start;
             width: 100%;
         }
-        .message.bot-message > *:first-child { margin-top: 0; }
-        .message.bot-message > *:last-child { margin-bottom: 0; }
-        [data-theme="dark"] .message.bot-message { box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
 
-        /* NEU: User Nachricht Styling (Manuelle Frage) */
+        /* --- NEU: ACCORDION STYLES (Collapsible Fields) --- */
+        /* Damit Accordions gut aussehen, setzen wir white-space für details zurück */
+        .message.bot-message details {
+            white-space: normal;
+            background-color: var(--body-bg); 
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            margin-top: 10px;
+            margin-bottom: 10px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .message.bot-message details[open] {
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            border-color: var(--bot-message-border-color); /* Highlight border when open */
+        }
+
+        .message.bot-message summary {
+            padding: 12px 15px;
+            font-weight: 600;
+            cursor: pointer;
+            background-color: var(--accordion-header-bg);
+            list-style: none; /* Standard-Dreieck entfernen */
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: background-color 0.2s;
+            user-select: none;
+        }
+
+        /* Standard-Dreieck in Webkit Browsern entfernen */
+        .message.bot-message summary::-webkit-details-marker {
+            display: none;
+        }
+
+        .message.bot-message summary:hover {
+            background-color: var(--accordion-header-hover);
+        }
+
+        /* Ein eigener Pfeil ganz rechts */
+        .message.bot-message summary::after {
+            content: '▼'; 
+            font-size: 0.8em;
+            color: var(--placeholder-color);
+            transition: transform 0.3s;
+            margin-left: 10px;
+        }
+
+        .message.bot-message details[open] summary::after {
+            transform: rotate(180deg);
+        }
+
+        /* Inhalt padding */
+        .message.bot-message details > *:not(summary) {
+            padding: 15px;
+            border-top: 1px solid var(--border-color);
+            margin: 0;
+            display: block; /* Sicherstellen, dass Inhalt angezeigt wird */
+        }
+
+        /* User Nachricht */
         .message.user-message {
             background-color: var(--button-send-bg);
             color: var(--button-send-text);
             padding: 10px 20px;
             border-radius: 20px 20px 0 20px;
-            align-self: flex-end; /* Rechts ausrichten */
-            margin-left: auto; /* Nach rechts schieben */
+            align-self: flex-end;
+            margin-left: auto;
             max-width: 80%;
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
             border: none;
         }
 
-        /* Styling für die initiale Nachricht */
+        /* Initiale Nachricht */
         .message.initial-message {
-            padding: 25px;
-            text-align: center;
-            background-image: url('background.png');
-            background-size: cover;
-            background-position: center;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            min-height: 380px;
-            border: none;
-            position: relative;
-            z-index: 1;
-            overflow: hidden;
+            padding: 25px; text-align: center;
+            background-image: url('background.png'); background-size: cover; background-position: center;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            min-height: 380px; border: none; position: relative; z-index: 1; overflow: hidden;
         }
         .message.initial-message::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            border-radius: 8px;
-            padding: 6px;
+            content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            border-radius: 8px; padding: 6px;
             background: linear-gradient(45deg, #a3cbff, #c5d4e7, #a3cbff);
             background-size: 200% 200%;
             -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-            -webkit-mask-composite: xor;
-            mask-composite: exclude;
-            animation: gradient-animation 4s ease infinite;
-            z-index: -1;
+            mask-composite: exclude; animation: gradient-animation 4s ease infinite; z-index: -1;
         }
-        .start-gif {
-             display: block; margin: 0 auto 15px auto;
-             max-width: var(--start-gif-max-width); height: auto;
-        }
-        .initial-message .title {
-            font-size: 4.2em; font-weight: 400; color: #ffffff;
-            margin-bottom: 10px; line-height: 1.1;
-        }
+        .start-gif { display: block; margin: 0 auto 15px auto; max-width: var(--start-gif-max-width); height: auto; }
+        .initial-message .title { font-size: 4.2em; font-weight: 400; color: #ffffff; margin-bottom: 10px; line-height: 1.1; }
         .initial-message .title span { font-weight: 300; }
-        .initial-message .intro-line {
-             margin-bottom: 0; font-weight: 400; font-size: 0.95em;
-             color: #ffffff; margin-top: 15px;
-         }
-        .initial-message .intro-line.error {
-            color: #ffdddd; font-weight: 600; background-color: rgba(0,0,0,0.3); padding: 5px 10px; border-radius: 5px;
-        }
+        .initial-message .intro-line { margin-bottom: 0; font-weight: 400; font-size: 0.95em; color: #ffffff; margin-top: 15px; }
+        .initial-message .intro-line.error { color: #ffdddd; font-weight: 600; background-color: rgba(0,0,0,0.3); padding: 5px 10px; border-radius: 5px; }
 
-        /* Thinking/Loading Styling */
+        /* Thinking/Loading */
         .thinking-message {
             text-align: center; font-style: italic; color: var(--placeholder-color);
             background-color: transparent; box-shadow: none; border: none;
-            padding: 10px; margin-bottom: 20px; transition: color 0.3s;
-            width: 100%;
+            padding: 10px; margin-bottom: 20px; width: 100%;
         }
-        .loading-gif {
-            display: block; height: var(--loading-gif-height); width: auto;
-            margin: 0 auto 10px auto;
-        }
+        .loading-gif { display: block; height: var(--loading-gif-height); width: auto; margin: 0 auto 10px auto; }
+        .error-message { background-color: #f8d7da; color: #842029; font-weight: bold; border: 1px solid #f5c2c7; }
+        [data-theme="dark"] .error-message { background-color: #842029; color: #f8d7da; border: 1px solid #8f2b36; }
 
-        .error-message {
-            background-color: #f8d7da; color: #842029; font-weight: bold;
-            transition: none; border: 1px solid #f5c2c7;
-        }
-        [data-theme="dark"] .error-message {
-             background-color: #842029; color: #f8d7da; border: 1px solid #8f2b36;
-        }
-
-        /* Follow-up Buttons Styling */
+        /* Follow-up Buttons */
         .follow-up-buttons {
-             margin-top: 15px; padding-top: 10px;
-             border-top: 1px dashed var(--border-color);
+             margin-top: 15px; padding-top: 10px; border-top: 1px dashed var(--border-color);
              display: flex; gap: 10px; flex-wrap: wrap;
         }
         .follow-up-buttons button {
             padding: 6px 12px; font-size: 0.9em; border-radius: 15px;
             border: 1px solid var(--followup-button-border);
-            background-color: var(--followup-button-bg);
-            color: var(--followup-button-text); cursor: pointer;
-            transition: background-color 0.2s, border-color 0.2s;
+            background-color: var(--followup-button-bg); color: var(--followup-button-text);
+            cursor: pointer; transition: background-color 0.2s, border-color 0.2s;
         }
         .follow-up-buttons button:hover { opacity: 0.85; }
 
-        /* Untere Chat-Eingabe (für Nutzer) */
+        /* Input Area */
         #input-area {
             display: flex; padding: 15px; border-top: 1px solid var(--border-color);
             background-color: var(--body-bg); flex-shrink: 0;
@@ -254,21 +265,15 @@
             color: var(--text-color); font-size: 1em; resize: none; outline: none;
             transition: background-color 0.3s, color 0.3s, border-color 0.3s;
         }
-        #user-input:focus {
-             border-color: #86b7fe; box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
-        }
-         [data-theme="dark"] #user-input:focus {
-              border-color: #4dabf7; box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.35);
-         }
+        #user-input:focus { border-color: #86b7fe; box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25); }
+        [data-theme="dark"] #user-input:focus { border-color: #4dabf7; box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.35); }
         #send-button {
-            padding: 10px 20px; background-color: var(--button-send-bg);
-            color: var(--button-send-text); border: none; border-radius: 20px;
-            cursor: pointer; font-size: 1em; font-weight: 600;
+            padding: 10px 20px; background-color: var(--button-send-bg); color: var(--button-send-text);
+            border: none; border-radius: 20px; cursor: pointer; font-size: 1em; font-weight: 600;
             transition: background-color 0.3s, color 0.3s;
         }
         #send-button:hover { opacity: 0.9; }
         #send-button:disabled { background-color: #6c757d; cursor: not-allowed; transition: none; }
-        [data-theme="dark"] #send-button:disabled { background-color: #495057; }
 
         /* Footer Disclaimer */
         #footer-disclaimer {
@@ -290,7 +295,7 @@
     </style>
 </head>
 <body>
-    <!-- Top Prompt Bar (Visually Hidden & Smaller) -->
+    <!-- Top Prompt Bar (Hidden) -->
     <div id="prompt-bar">
         <input type="text" id="prompt-input" placeholder="Automation...">
         <button id="go-button">Go</button>
@@ -304,7 +309,6 @@
             <h2 class="title">Synapse <span>AI</span></h2>
             <p class="intro-line">Hey! I am your personal Anki Assistant. Click the buttons above to start, don't forget to select your preferred language.</p>
         </div>
-        <!-- Dynamic messages will be added here -->
     </main>
     
     <!-- User Input Area -->
@@ -313,7 +317,7 @@
         <button id="send-button">Send</button>
     </div>
 
-    <!-- Footer Disclaimer -->
+    <!-- Footer -->
     <footer id="footer-disclaimer">
         <span>The Synapse Pro AI can make mistakes. Please check important Information.</span>
         <div class="footer-toggle-container">
@@ -326,7 +330,7 @@
     </footer>
 
     <script>
-        // --- DOM Element References ---
+        // --- DOM References ---
         const responseOutput = document.getElementById('response-output');
         const promptInput = document.getElementById('prompt-input');
         const goButton = document.getElementById('go-button');
@@ -335,10 +339,11 @@
         const darkModeToggle = document.getElementById('darkmode-toggle');
 
         // --- CONFIGURATION ---
+        // Vergewissere dich, dass diese URL korrekt auf dein Vercel Backend zeigt
         const BACKEND_API_URL = 'https://synapse-pro.vercel.app/api/chat'; 
         const MAX_HISTORY_LENGTH = 10;
 
-        // --- Global State ---
+        // --- State ---
         let chatHistory = [];
 
         // --- Event Listeners ---
@@ -348,7 +353,7 @@
         userInput.addEventListener('keypress', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(userInput); } });
         darkModeToggle.addEventListener('change', toggleTheme);
 
-        // --- Funktionen ---
+        // --- Logic ---
         function toggleTheme() {
              if (darkModeToggle.checked) { document.documentElement.setAttribute('data-theme', 'dark'); }
              else { document.documentElement.removeAttribute('data-theme'); }
@@ -359,8 +364,6 @@
             else { darkModeToggle.checked = false; document.documentElement.removeAttribute('data-theme'); }
         }
 
-        // Aktualisierte createMessageElement Funktion
-        // Nimmt nun customThinkingText entgegen, um den Ladetext zu ändern
         function createMessageElement(text, type = 'bot', isThinking = false, isError = false, customThinkingText = 'Analyzing your Anki Card...') {
              const messageDiv = document.createElement('div');
              messageDiv.classList.add('message');
@@ -375,9 +378,10 @@
                  messageDiv.textContent = text;
              } else if (type === 'bot') {
                  messageDiv.classList.add('bot-message');
-                 messageDiv.innerHTML = text;
+                 // HIER IST DIE WICHTIGE STELLE FÜR HTML
+                 // Wir setzen innerHTML, damit <details> und <summary> Tags interpretiert werden
+                 messageDiv.innerHTML = text; 
              } else if (type === 'user') {
-                 // NEU: Styling für User Nachrichten
                  messageDiv.classList.add('user-message');
                  messageDiv.textContent = text;
              }
@@ -390,7 +394,7 @@
             if (messageElement.classList.contains('error-message') || messageElement.classList.contains('initial-message')) { return; }
             const buttonArea = document.createElement('div');
             buttonArea.classList.add('follow-up-buttons');
-            const suggestions = ["Explain further", "Give an example"];
+            const suggestions = ["Explain further", "Give an example", "Summarize"];
             suggestions.forEach(suggestion => {
                 const button = document.createElement('button'); button.textContent = suggestion;
                 button.onclick = () => {
@@ -406,10 +410,9 @@
             const inputText = inputElement.value.trim(); if (!inputText) return;
             const oldButtonAreas = responseOutput.querySelectorAll('.follow-up-buttons'); oldButtonAreas.forEach(area => area.remove());
             
-            // Erkennung der Quelle
             const isManualInput = (inputElement.id === 'user-input');
 
-            // UI Sperren
+            // UI Disable
             promptInput.disabled = true; goButton.disabled = true; userInput.disabled = true; sendButton.disabled = true; inputElement.value = '';
 
             const initialMessage = responseOutput.querySelector('.initial-message');
@@ -417,14 +420,12 @@
                  initialMessage.style.display = 'none';
             }
 
-            // NEU: Nur wenn es manuell ist, zeigen wir die User-Blase an
             if (isManualInput) {
                 const userMessageElement = createMessageElement(inputText, 'user');
                 responseOutput.appendChild(userMessageElement);
                 scrollToBottom();
             }
 
-            // NEU: Lade-Text basierend auf Quelle
             const thinkingText = isManualInput ? "Thinking..." : "Analyzing your Anki Card...";
             const thinkingMsgElement = createMessageElement('', 'bot', true, false, thinkingText); 
             responseOutput.appendChild(thinkingMsgElement); 
@@ -441,36 +442,42 @@
                         apiKey: licenseKey 
                     })
                 });
+                
                 const currentThinkingElement = responseOutput.querySelector(`[data-thinking-id="${thinkingMsgElement.dataset.thinkingId}"]`);
+                
                 if (!response.ok) {
                     const errorData = await response.json().catch(() => ({ error: `Backend Error: ${response.statusText}` }));
-                    console.error('Backend/API Error:', response.status, errorData); 
                     let errorMessage = `${errorData.error || response.statusText}`;
                     if (response.status === 401 || response.status === 403) {
-                         errorMessage = "Authorization failed. Your Synapse Pro Key might be invalid or missing. Please restart Anki to re-enter it.";
+                         errorMessage = "Authorization failed. Your Synapse Pro Key might be invalid or missing.";
                     }
                     const errorElement = createMessageElement(errorMessage, 'bot', false, true);
                     if (currentThinkingElement) { currentThinkingElement.replaceWith(errorElement); } else { responseOutput.appendChild(errorElement); } return;
                 }
+
                 const data = await response.json();
+                
                 if (data.choices && data.choices.length > 0 && data.choices[0].message) {
                     const botReply = data.choices[0].message.content; 
                     const replyElement = createMessageElement(botReply, 'bot');
                     
-                    // History wird immer aktualisiert, egal ob manuell oder automatisch
-                    chatHistory.push({ role: "user", content: inputText }); chatHistory.push({ role: "assistant", content: botReply });
+                    chatHistory.push({ role: "user", content: inputText }); 
+                    chatHistory.push({ role: "assistant", content: botReply });
                     if (chatHistory.length > MAX_HISTORY_LENGTH) { chatHistory = chatHistory.slice(-MAX_HISTORY_LENGTH); }
                     
-                    if (currentThinkingElement) { currentThinkingElement.replaceWith(replyElement); generateFollowUpButtons(replyElement); }
-                    else { responseOutput.appendChild(replyElement); generateFollowUpButtons(replyElement); }
+                    if (currentThinkingElement) { currentThinkingElement.replaceWith(replyElement); } 
+                    else { responseOutput.appendChild(replyElement); }
+                    
+                    generateFollowUpButtons(replyElement);
                 } else if (data.error) {
                      const errorElement = createMessageElement(`Backend Error: ${data.error}`, 'bot', false, true);
                      if (currentThinkingElement) { currentThinkingElement.replaceWith(errorElement); } else { responseOutput.appendChild(errorElement); } return;
-                } else { throw new Error('Unexpected response structure from backend.'); }
+                } else { throw new Error('Unexpected response structure.'); }
+
             } catch (error) {
-                console.error('Communication error with backend:', error);
+                console.error(error);
                 const currentThinkingElement = responseOutput.querySelector(`[data-thinking-id="${thinkingMsgElement.dataset.thinkingId}"]`);
-                const displayError = `Communication Error: ${error.message}`; const errorElement = createMessageElement(displayError, 'bot', false, true);
+                const errorElement = createMessageElement(`Connection Error: ${error.message}`, 'bot', false, true);
                 if (currentThinkingElement) { currentThinkingElement.replaceWith(errorElement); } else { responseOutput.appendChild(errorElement); }
             } finally {
                 promptInput.disabled = false; goButton.disabled = false; userInput.disabled = false; sendButton.disabled = false; userInput.focus(); scrollToBottom();
@@ -481,27 +488,21 @@
         function initializeApp() {
             applySavedTheme();
             userInput.focus();
-            
             setTimeout(() => {
                 if (typeof window.__licenseKey === 'undefined' || !window.__licenseKey) {
-                    console.warn("License key not found in window.__licenseKey.");
+                    console.warn("License key not found.");
                     const initialMessage = document.querySelector('.initial-message');
                     if (initialMessage) {
                         const introLine = initialMessage.querySelector('.intro-line');
-                        introLine.textContent = "License key is missing. Please restart Anki and enter your key when prompted.";
+                        introLine.textContent = "License key is missing. Please restart Anki.";
                         introLine.classList.add('error');
                     }
-                    userInput.disabled = true;
-                    sendButton.disabled = true;
-                    userInput.placeholder = "License key required to operate.";
-                } else {
-                     console.log("License key successfully detected.");
-                }
+                    userInput.disabled = true; sendButton.disabled = true; userInput.placeholder = "License key required.";
+                } else { console.log("License key detected."); }
             }, 1500); 
         }
 
         initializeApp();
-
     </script>
 </body>
 </html>
