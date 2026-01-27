@@ -1,12 +1,7 @@
 // /api/chat.js
-
-// GEÄNDERT: Wir importieren jetzt das korrekte Paket, das in deiner package.json steht.
 import { Redis } from '@upstash/redis';
 
 const REQUEST_LIMIT = 10000;
-
-// GEÄNDERT: Wir initialisieren den Redis-Client.
-// Dieser Client verwendet automatisch die `UPSTASH_...`-Umgebungsvariablen von Vercel.
 const redis = Redis.fromEnv();
 
 export default async function handler(req, res) {
@@ -16,100 +11,72 @@ export default async function handler(req, res) {
     }
 
     const { userMessage, chatHistory, apiKey: userApiKey } = req.body;
-    let keyIncremented = false; // Flag, um zu wissen, ob wir dekrementieren müssen
+    let keyIncremented = false;
 
     try {
-        if (!userMessage) {
-            return res.status(400).json({ error: 'userMessage fehlt im Request Body.' });
-        }
-        
-        if (!userApiKey) {
-            return res.status(401).json({ error: "API Key is required. Please enter your Synapse Pro Key." });
-        }
+        if (!userMessage) return res.status(400).json({ error: 'userMessage fehlt.' });
+        if (!userApiKey) return res.status(401).json({ error: "API Key is required." });
 
-        // GEÄNDERT: Alle Aufrufe von `kv` werden durch `redis` ersetzt.
         const requestCount = await redis.get(userApiKey);
-
-        if (requestCount === null) {
-            return res.status(401).json({ error: "Invalid API Key. Please check your key." });
-        }
-
-        if (requestCount >= REQUEST_LIMIT) {
-            return res.status(429).json({ error: "Your API Key has reached its request limit." });
-        }
+        if (requestCount === null) return res.status(401).json({ error: "Invalid API Key." });
+        if (requestCount >= REQUEST_LIMIT) return res.status(429).json({ error: "Limit reached." });
         
         await redis.incr(userApiKey);
-        keyIncremented = true; // Zähler wurde erhöht
+        keyIncremented = true;
 
         const history = Array.isArray(chatHistory) ? chatHistory : [];
         const openRouterApiKey = process.env.OPENROUTER_API_KEY;
         const modelName = process.env.OPENROUTER_MODEL_NAME || 'openai/gpt-oss-120b';
 
         if (!openRouterApiKey) {
-            console.error('FEHLER: OPENROUTER_API_KEY nicht in Umgebungsvariablen gesetzt!');
-            await redis.decr(userApiKey); 
-            keyIncremented = false;
-            return res.status(500).json({ error: 'Serverkonfigurationsfehler.' });
+            await redis.decr(userApiKey);
+            return res.status(500).json({ error: 'Server Config Error.' });
         }
 
-        // Der System-Prompt bleibt unverändert.
+        // GEÄNDERTER PROMPT: Keine Emojis, striktes HTML
         const systemPrompt = { 
             role: "system", 
-            content: `You are Synapse Pro, a helpful assistant for medical students, explaining Anki cards. Always respond in the language used by the user in their last prompt.
+            content: `You are Synapse Pro, a medical assistant. Always respond in the language used by the user.
 
-**CRITICAL FORMATTING INSTRUCTION:** 
-1. Format your *entire* response using standard HTML tags. Do **NOT** use Markdown (no **bold**, no # headings).
-2. **COLLAPSIBLE SECTIONS:** Structure your explanation into logical sections using HTML \`<details>\` and \`<summary>\` tags.
+**FORMATTING RULES:**
+1. Use standard HTML tags. NO Markdown.
+2. **COLLAPSIBLE SECTIONS:** Structure the explanation using HTML \`<details>\` and \`<summary>\`.
    - Use \`<details>\` for the container.
-   - Use \`<summary>\` for the clickable heading (add an Emoji fitting the topic).
-   - Inside the details, put the explanation.
-   - Example: 
-     \`<details><summary>🧬 Anatomy</summary>Explanation here...</details>\`
-     \`<details><summary>💊 Clinical Relevance</summary>Explanation here...</details>\`
-
-3. **HIGHLIGHTING:**
+   - Use \`<summary>\` for the heading. **Do NOT use Emojis in the summary.** Keep headings short and professional.
+   - Inside details, put the content.
+3. **STYLING:**
    - Use \`<strong>\` for bold text.
    - Use \`<br>\` for line breaks.
-   - Highlight medical terms: \`<span style='color: var(--highlight-color-term, #005EB8);'>Term</span>\`.
-   - Highlight concepts: \`<span style='color: var(--highlight-color-concept, #28a745);'>Concept</span>\`.
+   - Highlight medical terms: \`<span style='color: var(--highlight-term);'>Term</span>\`.
+   - Highlight concepts: \`<span style='color: var(--highlight-concept);'>Concept</span>\`.
 
-Ensure the explanation is clear, accurate, and medically sound.` 
+Ensure the explanation is clear, spacious, and medically accurate.` 
         };
 
         const messagesToSend = [systemPrompt, ...history, { role: "user", content: userMessage }];
-        const openRouterUrl = 'https://openrouter.ai/api/v1/chat/completions';
-        const siteUrl = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000';
-        const appTitle = process.env.SITE_TITLE || 'Synapse Pro Chat';
 
-        const response = await fetch(openRouterUrl, {
+        const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${openRouterApiKey}`,
                 'Content-Type': 'application/json',
-                'HTTP-Referer': siteUrl,
-                'X-Title': appTitle
+                'HTTP-Referer': process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000',
+                'X-Title': 'Synapse Pro'
             },
-            body: JSON.stringify({
-                model: modelName,
-                messages: messagesToSend,
-            })
+            body: JSON.stringify({ model: modelName, messages: messagesToSend })
         });
 
         if (!response.ok) {
             await redis.decr(userApiKey);
-            keyIncremented = false;
-            const errorData = await response.json().catch(() => ({ error: { message: `OpenRouter Fehler: ${response.statusText}` } }));
-            return res.status(response.status).json({ error: `API Fehler (${response.status}): ${errorData?.error?.message || response.statusText}` });
+            const err = await response.json().catch(() => ({}));
+            return res.status(response.status).json({ error: err.error?.message || response.statusText });
         }
 
         const data = await response.json();
         res.status(200).json(data);
 
     } catch (error) {
-        console.error('Interner Serverfehler in /api/chat:', error);
-        if (keyIncremented && userApiKey) {
-            await redis.decr(userApiKey);
-        }
-        res.status(500).json({ error: 'Interner Serverfehler.' });
+        if (keyIncremented) await redis.decr(userApiKey);
+        res.status(500).json({ error: 'Internal Server Error.' });
     }
 }
