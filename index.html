@@ -12,12 +12,15 @@
     <style>
         /* --- BASE VARIABLES (Light Mode) --- */
         :root {
-            /* ÄNDERUNG: Hintergrund auf Weiß gesetzt */
             --body-bg: #ffffff;
-            --response-bg: #ffffff;
+            
+            /* ÄNDERUNG: Dezent hellgrauer Hintergrund für KI-Antworten und Eingabefeld */
+            --response-bg: #f5f5f5; 
+            --input-bg: #f5f5f5;
+            
             --text-color: #212529;
             --border-color: #dee2e6;
-            --input-bg: #ffffff;
+            
             --placeholder-color: #6c757d;
             --button-send-bg: #0071D3;
             --button-send-text: #ffffff;
@@ -28,7 +31,7 @@
             --followup-button-text: #495057;
             --followup-button-border: #ced4da;
             --bot-message-border-color: #0071D3;
-            --hidden-color: #ffffff; /* Angepasst an Body-BG */
+            --hidden-color: #ffffff; 
             --highlight-color-term: #005EB8;
             --highlight-color-concept: #28a745;
         }
@@ -61,7 +64,7 @@
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
 
-        /* ÄNDERUNG: Fixierte Trennlinie ganz oben */
+        /* Fixierte Trennlinie ganz oben */
         body::before {
             content: '';
             position: fixed;
@@ -69,9 +72,9 @@
             left: 0;
             right: 0;
             height: 1px;
-            background-color: #a0a0a0; /* Mittelgrau */
-            z-index: 10000; /* Stellt sicher, dass sie immer obenauf liegt */
-            pointer-events: none; /* Klicks gehen durch die Linie durch */
+            background-color: #a0a0a0;
+            z-index: 10000; 
+            pointer-events: none; 
         }
 
         body {
@@ -90,7 +93,6 @@
             display: flex; align-items: center; padding: 2px 10px;
             background-color: var(--hidden-color); border-bottom: none;
             flex-shrink: 0; transition: none;
-            /* Padding oben leicht erhöht, damit Text nicht direkt an der 1px Linie klebt, falls sichtbar */
             padding-top: 3px; 
         }
         #prompt-input {
