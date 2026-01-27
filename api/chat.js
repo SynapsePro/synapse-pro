@@ -43,7 +43,7 @@ export default async function handler(req, res) {
 
         const history = Array.isArray(chatHistory) ? chatHistory : [];
         const openRouterApiKey = process.env.OPENROUTER_API_KEY;
-        const modelName = process.env.OPENROUTER_MODEL_NAME || 'openai/gpt-4o-mini';
+        const modelName = process.env.OPENROUTER_MODEL_NAME || 'openai/gpt-oss-120b';
 
         if (!openRouterApiKey) {
             console.error('FEHLER: OPENROUTER_API_KEY nicht in Umgebungsvariablen gesetzt!');
@@ -55,7 +55,7 @@ export default async function handler(req, res) {
         // Der System-Prompt bleibt unverändert.
         const systemPrompt = { 
             role: "system", 
-            content: `You are Synapse Pro, a helpful assistant for medical students, explaining Anki cards. Always respond in the language used by the user in their last prompt.
+            content: `You are Synapse Pro, a helpful assistant for students, explaining Anki cards. Always respond in the language used by the user in their last prompt.
 **CRITICAL FORMATTING INSTRUCTION:** Format your *entire* response using standard HTML tags for emphasis and highlighting specific terms/concepts with colors. Do **NOT** use Markdown syntax like **bold** or *italic*. You MUST use the specified HTML tags. Do **NOT** use background highlighting.
 *   Use \`<strong>\` for general bold text (like headings or main points).
 *   Use \`<em>\` for italics if needed.
