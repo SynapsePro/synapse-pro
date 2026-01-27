@@ -4,60 +4,60 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Synapse Pro - AI Chat</title>
-    <!-- Import Poppins Font -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
-
+    
     <style>
-        /* --- BASE VARIABLES (Light Mode) --- */
+        /* --- APPLE STYLE VARIABLES (Light Mode) --- */
         :root {
-            --body-bg: #ffffff;
-            --response-bg: #f5f5f5; 
-            --input-bg: #f5f5f5;
-            --text-color: #212529;
-            --border-color: #dee2e6;
-            --placeholder-color: #6c757d;
-            --button-send-bg: #0071D3;
-            --button-send-text: #ffffff;
-            --footer-text: #6c757d;
-            --loading-gif-height: 60px;
-            --start-gif-max-width: 100px;
-            --followup-button-bg: #e9ecef;
-            --followup-button-text: #495057;
-            --followup-button-border: #ced4da;
-            --bot-message-border-color: #0071D3;
-            --hidden-color: #ffffff; 
-            --highlight-color-term: #005EB8;
-            --highlight-color-concept: #28a745;
+            /* Hintergrund der gesamten App */
+            --body-bg: #ffffff; 
             
-            /* Accordion Specifics */
-            --accordion-header-bg: rgba(0,0,0,0.03);
-            --accordion-header-hover: rgba(0,0,0,0.06);
+            /* Chat Bubbles */
+            --bot-bg: #F2F4F6; /* Sehr helles Grau/Blau-Grau, modern und clean */
+            --user-bg: #007AFF; /* Apple Blue */
+            --user-text: #ffffff;
+            
+            /* Text */
+            --text-primary: #1c1c1e; /* Fast Schwarz, weicher als #000 */
+            --text-secondary: #8e8e93; /* Apple Gray */
+            
+            /* Accordion (Aufklappboxen) */
+            --card-bg: #ffffff;
+            --card-shadow: 0 2px 12px rgba(0, 0, 0, 0.06); /* Sehr weicher Schatten */
+            --card-border: rgba(0, 0, 0, 0.05); /* Kaum sichtbarer Rand */
+            --header-hover: #fcfcfc;
+
+            /* Highlights */
+            --highlight-term: #007AFF; /* Apple Blue */
+            --highlight-concept: #34C759; /* Apple Green */
+            
+            /* UI Elements */
+            --input-bg: #F2F4F6;
+            --border-radius-bubble: 18px;
+            --border-radius-card: 14px;
+            
+            --loading-gif-height: 50px;
         }
 
-        /* --- DARK MODE Variables --- */
+        /* --- DARK MODE VARIABLES (iOS Style) --- */
         [data-theme="dark"] {
-            --body-bg: #212529;
-            --response-bg: rgb(50, 50, 50);
-            --text-color: #f8f9fa;
-            --border-color: #495057;
-            --input-bg: rgb(50, 50, 50);
-            --placeholder-color: #adb5bd;
-            --button-send-bg: #005eb8;
-            --button-send-text: #ffffff;
-            --footer-text: #adb5bd;
-            --followup-button-bg: rgb(50, 50, 50);
-            --followup-button-text: #f8f9fa;
-            --followup-button-border: #6c757d;
-            --bot-message-border-color: #0071D3;
-            --hidden-color: var(--body-bg);
-            --highlight-color-term: #66bfff;
-            --highlight-color-concept: #52c41a;
+            --body-bg: #000000;
+            
+            --bot-bg: #1c1c1e; /* Dunkles Grau für Hintergrund */
+            --user-bg: #0A84FF;
+            --user-text: #ffffff;
+            
+            --text-primary: #ffffff;
+            --text-secondary: #98989d;
+            
+            --card-bg: #2c2c2e; /* Etwas heller als Hintergrund */
+            --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            --card-border: rgba(255, 255, 255, 0.1);
+            --header-hover: #3a3a3c;
 
-            /* Accordion Dark Mode */
-            --accordion-header-bg: rgba(255,255,255,0.05);
-            --accordion-header-hover: rgba(255,255,255,0.1);
+            --highlight-term: #64D2FF;
+            --highlight-concept: #30D158;
+            
+            --input-bg: #1c1c1e;
         }
 
         @keyframes gradient-animation {
@@ -68,260 +68,309 @@
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
 
-        /* Fixierte Trennlinie ganz oben */
-        body::before {
-            content: '';
-            position: fixed;
-            top: 0; left: 0; right: 0; height: 1px;
-            background-color: #d4d4d4;
-            z-index: 10000; pointer-events: none; 
-        }
-
         body {
-            font-family: 'Poppins', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            /* Apple System Fonts Stack - Modern und Clean */
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             background-color: var(--body-bg);
-            color: var(--text-color);
+            color: var(--text-primary);
             display: flex;
             flex-direction: column;
             height: 100vh;
             overflow: hidden;
-            transition: background-color 0.3s, color 0.3s;
+            font-size: 15px; /* Etwas kleiner, feiner */
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased; /* Wichtig für dünnere Schriften */
         }
 
-        /* Obere Prompt-Leiste (Visuell versteckt / Automation) */
-        #prompt-bar {
-            display: flex; align-items: center; padding: 2px 10px;
-            background-color: var(--hidden-color); border-bottom: none;
-            flex-shrink: 0; transition: none; padding-top: 3px; 
-        }
-        #prompt-input {
-            flex-grow: 1; padding: 3px 8px; font-size: 0.75em;
-            border: 1px solid var(--hidden-color); border-radius: 3px 0 0 3px;
-            background-color: var(--hidden-color); color: var(--hidden-color);
-            border-right: none; outline: none; box-shadow: none; transition: none;
-        }
-        #go-button {
-            padding: 3px 10px; font-size: 0.75em; font-weight: 600;
-            background-color: var(--hidden-color); color: var(--hidden-color);
-            border: 1px solid var(--hidden-color); border-left: none;
-            border-radius: 0 3px 3px 0; cursor: pointer; white-space: nowrap; transition: none;
-        }
-        [data-theme="dark"] #prompt-bar, [data-theme="dark"] #prompt-input, [data-theme="dark"] #go-button {
-            background-color: var(--hidden-color); border-color: var(--hidden-color); color: var(--hidden-color);
-        }
+        /* Versteckte Top Bar */
+        #prompt-bar { display: none; } 
 
-        /* Hauptbereich für Antworten */
+        /* Hauptbereich */
         #response-output {
-            flex-grow: 1; overflow-y: auto; padding: 5px 25px 25px 25px;
-            background-color: var(--body-bg); display: flex;
-            flex-direction: column; transition: background-color 0.3s;
+            flex-grow: 1; 
+            overflow-y: auto; 
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px; /* Abstand zwischen Nachrichten */
         }
 
+        /* --- NACHRICHTEN STYLING --- */
         .message {
-            margin-bottom: 20px;
             max-width: 100%;
-            line-height: 1.6;
-            white-space: pre-wrap; /* Wichtig für normale Textnachrichten */
-            transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+            position: relative;
+            word-wrap: break-word;
         }
 
-        /* Allgemeine Bot-Nachricht */
+        /* 1. Bot Nachricht (Apple Style) */
         .message.bot-message {
-            background-color: var(--response-bg); color: var(--text-color);
-            padding: 15px 20px; border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-            border: 1px solid var(--bot-message-border-color);
+            background-color: var(--bot-bg);
+            color: var(--text-primary);
+            padding: 16px 20px;
+            border-radius: var(--border-radius-bubble);
+            border-bottom-left-radius: 4px; /* Kleiner Eselsohr-Effekt links */
+            box-shadow: none; /* Flat design */
+            border: none;
             align-self: flex-start;
+            width: 100%; /* Volle Breite nutzen */
+        }
+
+        /* Typografie im Bot Text */
+        .message.bot-message strong {
+            font-weight: 600; /* Nicht zu fett (700 ist Standard) */
+            color: var(--text-primary);
+        }
+        
+        /* Listen sollen sauber eingerückt sein */
+        .message.bot-message ul, .message.bot-message ol {
+            padding-left: 25px;
+            margin-bottom: 10px;
+        }
+        .message.bot-message li {
+            margin-bottom: 5px;
+        }
+
+        /* 2. User Nachricht (iMessage Style) */
+        .message.user-message {
+            background-color: var(--user-bg);
+            color: var(--user-text);
+            padding: 12px 18px;
+            border-radius: var(--border-radius-bubble);
+            border-bottom-right-radius: 4px;
+            align-self: flex-end;
+            margin-left: auto;
+            max-width: 85%;
+            font-weight: 400;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        /* --- ACCORDION / DETAILS (Das Herzstück) --- */
+        .message.bot-message details {
+            background-color: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: var(--border-radius-card);
+            margin-top: 8px; /* Weniger Abstand nach oben */
+            margin-bottom: 8px; /* Weniger Abstand nach unten */
+            overflow: hidden;
+            box-shadow: var(--card-shadow);
+            transition: all 0.2s ease-in-out;
             width: 100%;
         }
 
-        /* --- NEU: ACCORDION STYLES (Collapsible Fields) --- */
-        /* Damit Accordions gut aussehen, setzen wir white-space für details zurück */
-        .message.bot-message details {
-            white-space: normal;
-            background-color: var(--body-bg); 
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            margin-top: 10px;
-            margin-bottom: 10px;
-            overflow: hidden;
-            transition: all 0.3s ease;
-        }
-
         .message.bot-message details[open] {
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-            border-color: var(--bot-message-border-color); /* Highlight border when open */
+            box-shadow: 0 4px 16px rgba(0,0,0,0.08); /* Etwas mehr Schatten wenn offen */
         }
 
+        /* Der Header (Klickbereich) */
         .message.bot-message summary {
-            padding: 12px 15px;
+            padding: 14px 18px;
             font-weight: 600;
+            font-size: 0.95rem;
             cursor: pointer;
-            background-color: var(--accordion-header-bg);
-            list-style: none; /* Standard-Dreieck entfernen */
+            list-style: none;
             display: flex;
-            align-items: center;
+            align-items: center; /* Vertikal zentrieren */
             justify-content: space-between;
+            color: var(--text-primary);
             transition: background-color 0.2s;
             user-select: none;
-        }
-
-        /* Standard-Dreieck in Webkit Browsern entfernen */
-        .message.bot-message summary::-webkit-details-marker {
-            display: none;
+            gap: 10px; /* Abstand zwischen Text und Pfeil */
+            line-height: 1.3;
         }
 
         .message.bot-message summary:hover {
-            background-color: var(--accordion-header-hover);
+            background-color: var(--header-hover);
         }
 
-        /* Ein eigener Pfeil ganz rechts */
+        .message.bot-message summary::-webkit-details-marker { display: none; }
+
+        /* Der Pfeil (Chevron) */
         .message.bot-message summary::after {
-            content: '▼'; 
-            font-size: 0.8em;
-            color: var(--placeholder-color);
-            transition: transform 0.3s;
+            content: '';
+            width: 10px;
+            height: 10px;
+            border-right: 2px solid var(--text-secondary);
+            border-bottom: 2px solid var(--text-secondary);
+            transform: rotate(45deg);
+            transition: transform 0.2s ease;
             margin-left: 10px;
+            flex-shrink: 0; /* Verhindert, dass der Pfeil gequetscht wird */
         }
 
         .message.bot-message details[open] summary::after {
-            transform: rotate(180deg);
+            transform: rotate(225deg); /* Drehung nach oben */
+            margin-top: 5px; 
         }
 
-        /* Inhalt padding */
+        /* Der Inhalt der Box */
         .message.bot-message details > *:not(summary) {
-            padding: 15px;
-            border-top: 1px solid var(--border-color);
+            padding: 18px 22px; /* Viel Padding innen! */
+            border-top: 1px solid var(--card-border);
+            display: block;
+            background-color: var(--card-bg);
+            color: var(--text-primary);
+        }
+        
+        /* Fix für Listen innerhalb von Details */
+        .message.bot-message details ul {
+            padding-left: 20px;
             margin: 0;
-            display: block; /* Sicherstellen, dass Inhalt angezeigt wird */
         }
 
-        /* User Nachricht */
-        .message.user-message {
-            background-color: var(--button-send-bg);
-            color: var(--button-send-text);
-            padding: 10px 20px;
-            border-radius: 20px 20px 0 20px;
-            align-self: flex-end;
-            margin-left: auto;
-            max-width: 80%;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            border: none;
-        }
 
-        /* Initiale Nachricht */
+        /* --- INITIAL SCREEN --- */
         .message.initial-message {
-            padding: 25px; text-align: center;
-            background-image: url('background.png'); background-size: cover; background-position: center;
-            display: flex; flex-direction: column; justify-content: center; align-items: center;
-            min-height: 380px; border: none; position: relative; z-index: 1; overflow: hidden;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); /* Moderner Gradient */
+            color: white;
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            min-height: 300px;
+            box-shadow: 0 10px 30px rgba(118, 75, 162, 0.3);
+            margin-bottom: 30px;
         }
-        .message.initial-message::before {
-            content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
-            border-radius: 8px; padding: 6px;
-            background: linear-gradient(45deg, #a3cbff, #c5d4e7, #a3cbff);
-            background-size: 200% 200%;
-            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-            mask-composite: exclude; animation: gradient-animation 4s ease infinite; z-index: -1;
+        
+        .initial-message .title {
+            font-size: 3em; font-weight: 700; margin-bottom: 10px; letter-spacing: -1px;
         }
-        .start-gif { display: block; margin: 0 auto 15px auto; max-width: var(--start-gif-max-width); height: auto; }
-        .initial-message .title { font-size: 4.2em; font-weight: 400; color: #ffffff; margin-bottom: 10px; line-height: 1.1; }
-        .initial-message .title span { font-weight: 300; }
-        .initial-message .intro-line { margin-bottom: 0; font-weight: 400; font-size: 0.95em; color: #ffffff; margin-top: 15px; }
-        .initial-message .intro-line.error { color: #ffdddd; font-weight: 600; background-color: rgba(0,0,0,0.3); padding: 5px 10px; border-radius: 5px; }
+        .initial-message .intro-line {
+            font-size: 1.1em; opacity: 0.9; font-weight: 400; max-width: 400px; line-height: 1.6;
+        }
+        .start-gif { max-width: 80px; margin-bottom: 20px; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.2)); }
 
-        /* Thinking/Loading */
+
+        /* --- INPUT AREA --- */
+        #input-area {
+            padding: 15px 20px;
+            background-color: rgba(255,255,255,0.8); /* Glas-Effekt Vorbereitung */
+            backdrop-filter: blur(10px);
+            border-top: 1px solid var(--card-border);
+            display: flex; gap: 10px;
+            flex-shrink: 0;
+            z-index: 100;
+        }
+        [data-theme="dark"] #input-area { background-color: rgba(28,28,30,0.8); }
+
+        #user-input {
+            flex-grow: 1;
+            padding: 12px 16px;
+            border-radius: 25px; /* Pill Shape */
+            border: 1px solid transparent;
+            background-color: var(--input-bg);
+            color: var(--text-primary);
+            font-size: 1rem;
+            outline: none;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+        #user-input:focus {
+            background-color: var(--body-bg);
+            border-color: var(--user-bg);
+            box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.15);
+        }
+
+        #send-button {
+            width: 45px; height: 45px;
+            border-radius: 50%;
+            background-color: var(--user-bg);
+            color: white;
+            border: none;
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            transition: transform 0.1s;
+            flex-shrink: 0;
+            font-size: 0.9em;
+            font-weight: bold;
+        }
+        #send-button:hover { transform: scale(1.05); }
+        #send-button:active { transform: scale(0.95); }
+        /* Kleines Icon statt Text für Send Button */
+        #send-button::before { content: '➤'; font-size: 16px; margin-left: 2px; }
+        #send-button span { display: none; } /* Text verstecken */
+
+
+        /* --- LOADING & ERROR --- */
         .thinking-message {
-            text-align: center; font-style: italic; color: var(--placeholder-color);
-            background-color: transparent; box-shadow: none; border: none;
-            padding: 10px; margin-bottom: 20px; width: 100%;
+            display: flex; align-items: center; gap: 10px;
+            color: var(--text-secondary);
+            font-style: normal; font-size: 0.9em;
+            margin-left: 5px;
         }
-        .loading-gif { display: block; height: var(--loading-gif-height); width: auto; margin: 0 auto 10px auto; }
-        .error-message { background-color: #f8d7da; color: #842029; font-weight: bold; border: 1px solid #f5c2c7; }
-        [data-theme="dark"] .error-message { background-color: #842029; color: #f8d7da; border: 1px solid #8f2b36; }
+        .loading-gif { height: 20px; width: 20px; opacity: 0.6; } /* Kleiner Loader */
 
-        /* Follow-up Buttons */
+        .error-message {
+            background-color: #ff3b30; color: white; border: none;
+        }
+
+
+        /* --- FOLLOW UP BUTTONS --- */
         .follow-up-buttons {
-             margin-top: 15px; padding-top: 10px; border-top: 1px dashed var(--border-color);
-             display: flex; gap: 10px; flex-wrap: wrap;
+            display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px;
+            padding-top: 0; border: none;
         }
         .follow-up-buttons button {
-            padding: 6px 12px; font-size: 0.9em; border-radius: 15px;
-            border: 1px solid var(--followup-button-border);
-            background-color: var(--followup-button-bg); color: var(--followup-button-text);
-            cursor: pointer; transition: background-color 0.2s, border-color 0.2s;
+            background-color: transparent;
+            border: 1px solid var(--user-bg);
+            color: var(--user-bg);
+            padding: 6px 14px;
+            border-radius: 16px;
+            font-size: 0.85em;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
         }
-        .follow-up-buttons button:hover { opacity: 0.85; }
+        .follow-up-buttons button:hover {
+            background-color: var(--user-bg);
+            color: white;
+        }
 
-        /* Input Area */
-        #input-area {
-            display: flex; padding: 15px; border-top: 1px solid var(--border-color);
-            background-color: var(--body-bg); flex-shrink: 0;
-            transition: background-color 0.3s, border-color 0.3s;
-        }
-        #user-input {
-            flex-grow: 1; padding: 10px 15px; border: 1px solid var(--border-color);
-            border-radius: 20px; margin-right: 10px; background-color: var(--input-bg);
-            color: var(--text-color); font-size: 1em; resize: none; outline: none;
-            transition: background-color 0.3s, color 0.3s, border-color 0.3s;
-        }
-        #user-input:focus { border-color: #86b7fe; box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25); }
-        [data-theme="dark"] #user-input:focus { border-color: #4dabf7; box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.35); }
-        #send-button {
-            padding: 10px 20px; background-color: var(--button-send-bg); color: var(--button-send-text);
-            border: none; border-radius: 20px; cursor: pointer; font-size: 1em; font-weight: 600;
-            transition: background-color 0.3s, color 0.3s;
-        }
-        #send-button:hover { opacity: 0.9; }
-        #send-button:disabled { background-color: #6c757d; cursor: not-allowed; transition: none; }
 
-        /* Footer Disclaimer */
+        /* --- FOOTER --- */
         #footer-disclaimer {
-            padding: 10px 20px; display: flex; justify-content: space-between;
-            align-items: center; font-size: 0.75em; color: var(--footer-text);
-            background-color: var(--body-bg); flex-shrink: 0;
-            border-top: 1px solid var(--border-color);
-            transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+            padding: 8px 20px;
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+            background-color: var(--body-bg);
+            border-top: 1px solid var(--card-border);
+            display: flex; justify-content: space-between; align-items: center;
         }
-        .darkmode-label { margin-right: 5px; font-size: 0.9em; }
-        .switch { position: relative; display: inline-block; width: 34px; height: 20px; vertical-align: middle; }
-        .switch input { display:none; }
-        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 20px; }
-        .slider:before { position: absolute; content: ""; height: 14px; width: 14px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
-        input:checked + .slider { background-color: #0071D3; }
-        [data-theme="dark"] input:checked + .slider { background-color: #2196F3; }
-        input:checked + .slider:before { transform: translateX(14px); }
-        .footer-toggle-container { display: flex; align-items: center; }
+        
+        /* Switch styling */
+        .switch { position: relative; display: inline-block; width: 36px; height: 20px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #e9e9eb; transition: .4s; border-radius: 34px; }
+        .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 2px; bottom: 2px; background-color: white; transition: .4s; border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+        input:checked + .slider { background-color: #34C759; }
+        input:checked + .slider:before { transform: translateX(16px); }
+        [data-theme="dark"] .slider { background-color: #3a3a3c; }
+
     </style>
 </head>
 <body>
-    <!-- Top Prompt Bar (Hidden) -->
+    <!-- Hidden Inputs for Anki Automation -->
     <div id="prompt-bar">
-        <input type="text" id="prompt-input" placeholder="Automation...">
+        <input type="text" id="prompt-input">
         <button id="go-button">Go</button>
     </div>
 
-    <!-- Main Content Area -->
     <main id="response-output">
-        <!-- Initial Message -->
         <div class="message bot-message initial-message">
-            <img src="start.gif" alt="Start Guide" class="start-gif">
-            <h2 class="title">Synapse <span>AI</span></h2>
-            <p class="intro-line">Hey! I am your personal Anki Assistant. Click the buttons above to start, don't forget to select your preferred language.</p>
+            <img src="start.gif" alt="" class="start-gif">
+            <h2 class="title">Synapse Pro</h2>
+            <p class="intro-line">Your medical AI assistant.<br>Ready to analyze your Anki cards.</p>
         </div>
     </main>
     
-    <!-- User Input Area -->
     <div id="input-area">
-        <input type="text" id="user-input" placeholder="Ask something...">
-        <button id="send-button">Send</button>
+        <input type="text" id="user-input" placeholder="Ask a question...">
+        <button id="send-button"><span>Send</span></button>
     </div>
 
-    <!-- Footer -->
     <footer id="footer-disclaimer">
-        <span>The Synapse Pro AI can make mistakes. Please check important Information.</span>
-        <div class="footer-toggle-container">
-            <span class="darkmode-label">Darkmode</span>
+        <span>AI can make mistakes. Check important info.</span>
+        <div style="display:flex; align-items:center; gap:8px;">
+            <span>Dark</span>
             <label class="switch">
                 <input type="checkbox" id="darkmode-toggle">
                 <span class="slider round"></span>
@@ -330,7 +379,6 @@
     </footer>
 
     <script>
-        // --- DOM References ---
         const responseOutput = document.getElementById('response-output');
         const promptInput = document.getElementById('prompt-input');
         const goButton = document.getElementById('go-button');
@@ -338,48 +386,40 @@
         const sendButton = document.getElementById('send-button');
         const darkModeToggle = document.getElementById('darkmode-toggle');
 
-        // --- CONFIGURATION ---
-        // Vergewissere dich, dass diese URL korrekt auf dein Vercel Backend zeigt
         const BACKEND_API_URL = 'https://synapse-pro.vercel.app/api/chat'; 
         const MAX_HISTORY_LENGTH = 10;
-
-        // --- State ---
         let chatHistory = [];
 
-        // --- Event Listeners ---
         goButton.addEventListener('click', () => handleSend(promptInput));
-        promptInput.addEventListener('keypress', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(promptInput); } });
+        promptInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') handleSend(promptInput); });
         sendButton.addEventListener('click', () => handleSend(userInput));
-        userInput.addEventListener('keypress', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(userInput); } });
+        userInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') handleSend(userInput); });
         darkModeToggle.addEventListener('change', toggleTheme);
 
-        // --- Logic ---
         function toggleTheme() {
-             if (darkModeToggle.checked) { document.documentElement.setAttribute('data-theme', 'dark'); }
-             else { document.documentElement.removeAttribute('data-theme'); }
+             if (darkModeToggle.checked) { document.documentElement.setAttribute('data-theme', 'dark'); localStorage.setItem('theme', 'dark'); }
+             else { document.documentElement.removeAttribute('data-theme'); localStorage.setItem('theme', 'light'); }
         }
+        
         function applySavedTheme() {
             const savedTheme = localStorage.getItem('theme');
             if (savedTheme === 'dark') { darkModeToggle.checked = true; document.documentElement.setAttribute('data-theme', 'dark'); }
-            else { darkModeToggle.checked = false; document.documentElement.removeAttribute('data-theme'); }
         }
 
-        function createMessageElement(text, type = 'bot', isThinking = false, isError = false, customThinkingText = 'Analyzing your Anki Card...') {
+        function createMessageElement(text, type = 'bot', isThinking = false, isError = false) {
              const messageDiv = document.createElement('div');
              messageDiv.classList.add('message');
 
              if (isThinking) {
                  messageDiv.classList.add('thinking-message');
-                 const img = document.createElement('img'); img.src = 'loading.gif'; img.alt = 'Loading...'; img.classList.add('loading-gif'); messageDiv.appendChild(img);
-                 const textNode = document.createTextNode(customThinkingText); messageDiv.appendChild(textNode);
+                 // Einfacherer Loader Text statt Bild für cleaner look
+                 messageDiv.innerHTML = '<span style="font-size:1.2em;">✦</span> Analyzing Anki Card...';
                  messageDiv.dataset.thinkingId = `thinking-${Date.now()}`;
              } else if (isError) {
                  messageDiv.classList.add('bot-message', 'error-message');
                  messageDiv.textContent = text;
              } else if (type === 'bot') {
                  messageDiv.classList.add('bot-message');
-                 // HIER IST DIE WICHTIGE STELLE FÜR HTML
-                 // Wir setzen innerHTML, damit <details> und <summary> Tags interpretiert werden
                  messageDiv.innerHTML = text; 
              } else if (type === 'user') {
                  messageDiv.classList.add('user-message');
@@ -388,17 +428,18 @@
             return messageDiv;
         }
 
-        function scrollToBottom() { setTimeout(() => { responseOutput.scrollTop = responseOutput.scrollHeight; }, 50); }
+        function scrollToBottom() { 
+            setTimeout(() => { responseOutput.scrollTo({ top: responseOutput.scrollHeight, behavior: 'smooth' }); }, 100); 
+        }
 
         function generateFollowUpButtons(messageElement) {
-            if (messageElement.classList.contains('error-message') || messageElement.classList.contains('initial-message')) { return; }
             const buttonArea = document.createElement('div');
             buttonArea.classList.add('follow-up-buttons');
-            const suggestions = ["Explain further", "Give an example", "Summarize"];
+            const suggestions = ["Deep dive", "Give an example", "Summarize"];
             suggestions.forEach(suggestion => {
                 const button = document.createElement('button'); button.textContent = suggestion;
                 button.onclick = () => {
-                    const oldButtonAreas = responseOutput.querySelectorAll('.follow-up-buttons'); oldButtonAreas.forEach(area => area.remove());
+                    document.querySelectorAll('.follow-up-buttons').forEach(area => area.remove());
                     userInput.value = suggestion; handleSend(userInput);
                 };
                 buttonArea.appendChild(button);
@@ -408,98 +449,64 @@
 
         async function handleSend(inputElement) {
             const inputText = inputElement.value.trim(); if (!inputText) return;
-            const oldButtonAreas = responseOutput.querySelectorAll('.follow-up-buttons'); oldButtonAreas.forEach(area => area.remove());
+            document.querySelectorAll('.follow-up-buttons').forEach(area => area.remove());
             
             const isManualInput = (inputElement.id === 'user-input');
+            inputElement.value = ''; userInput.disabled = true; sendButton.disabled = true;
 
-            // UI Disable
-            promptInput.disabled = true; goButton.disabled = true; userInput.disabled = true; sendButton.disabled = true; inputElement.value = '';
-
-            const initialMessage = responseOutput.querySelector('.initial-message');
-            if (initialMessage && initialMessage.style.display !== 'none') {
-                 initialMessage.style.display = 'none';
-            }
+            const initialMessage = document.querySelector('.initial-message');
+            if (initialMessage) initialMessage.style.display = 'none';
 
             if (isManualInput) {
-                const userMessageElement = createMessageElement(inputText, 'user');
-                responseOutput.appendChild(userMessageElement);
-                scrollToBottom();
+                responseOutput.appendChild(createMessageElement(inputText, 'user'));
             }
 
-            const thinkingText = isManualInput ? "Thinking..." : "Analyzing your Anki Card...";
-            const thinkingMsgElement = createMessageElement('', 'bot', true, false, thinkingText); 
-            responseOutput.appendChild(thinkingMsgElement); 
+            const thinkingMsg = createMessageElement('', 'bot', true); 
+            responseOutput.appendChild(thinkingMsg); 
             scrollToBottom();
 
             try {
                 const licenseKey = window.__licenseKey || null;
-
                 const response = await fetch(BACKEND_API_URL, {
                     method: 'POST', headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                        userMessage: inputText, 
-                        chatHistory: chatHistory,
-                        apiKey: licenseKey 
-                    })
+                    body: JSON.stringify({ userMessage: inputText, chatHistory, apiKey: licenseKey })
                 });
                 
-                const currentThinkingElement = responseOutput.querySelector(`[data-thinking-id="${thinkingMsgElement.dataset.thinkingId}"]`);
+                const currentThinking = document.querySelector(`[data-thinking-id="${thinkingMsg.dataset.thinkingId}"]`);
                 
-                if (!response.ok) {
-                    const errorData = await response.json().catch(() => ({ error: `Backend Error: ${response.statusText}` }));
-                    let errorMessage = `${errorData.error || response.statusText}`;
-                    if (response.status === 401 || response.status === 403) {
-                         errorMessage = "Authorization failed. Your Synapse Pro Key might be invalid or missing.";
-                    }
-                    const errorElement = createMessageElement(errorMessage, 'bot', false, true);
-                    if (currentThinkingElement) { currentThinkingElement.replaceWith(errorElement); } else { responseOutput.appendChild(errorElement); } return;
-                }
+                if (!response.ok) throw new Error(response.statusText);
 
                 const data = await response.json();
+                const botReply = data.choices?.[0]?.message?.content || "No response.";
                 
-                if (data.choices && data.choices.length > 0 && data.choices[0].message) {
-                    const botReply = data.choices[0].message.content; 
-                    const replyElement = createMessageElement(botReply, 'bot');
-                    
-                    chatHistory.push({ role: "user", content: inputText }); 
-                    chatHistory.push({ role: "assistant", content: botReply });
-                    if (chatHistory.length > MAX_HISTORY_LENGTH) { chatHistory = chatHistory.slice(-MAX_HISTORY_LENGTH); }
-                    
-                    if (currentThinkingElement) { currentThinkingElement.replaceWith(replyElement); } 
-                    else { responseOutput.appendChild(replyElement); }
-                    
-                    generateFollowUpButtons(replyElement);
-                } else if (data.error) {
-                     const errorElement = createMessageElement(`Backend Error: ${data.error}`, 'bot', false, true);
-                     if (currentThinkingElement) { currentThinkingElement.replaceWith(errorElement); } else { responseOutput.appendChild(errorElement); } return;
-                } else { throw new Error('Unexpected response structure.'); }
+                const replyElement = createMessageElement(botReply, 'bot');
+                
+                chatHistory.push({ role: "user", content: inputText }); 
+                chatHistory.push({ role: "assistant", content: botReply });
+                if (chatHistory.length > MAX_HISTORY_LENGTH) chatHistory = chatHistory.slice(-MAX_HISTORY_LENGTH);
+                
+                if (currentThinking) currentThinking.replaceWith(replyElement);
+                else responseOutput.appendChild(replyElement);
+                
+                generateFollowUpButtons(replyElement);
 
             } catch (error) {
-                console.error(error);
-                const currentThinkingElement = responseOutput.querySelector(`[data-thinking-id="${thinkingMsgElement.dataset.thinkingId}"]`);
-                const errorElement = createMessageElement(`Connection Error: ${error.message}`, 'bot', false, true);
-                if (currentThinkingElement) { currentThinkingElement.replaceWith(errorElement); } else { responseOutput.appendChild(errorElement); }
+                const currentThinking = document.querySelector(`[data-thinking-id="${thinkingMsg.dataset.thinkingId}"]`);
+                const errElem = createMessageElement("Connection Error. Please check your key or internet.", 'bot', false, true);
+                if (currentThinking) currentThinking.replaceWith(errElem); else responseOutput.appendChild(errElem);
             } finally {
-                promptInput.disabled = false; goButton.disabled = false; userInput.disabled = false; sendButton.disabled = false; userInput.focus(); scrollToBottom();
+                userInput.disabled = false; sendButton.disabled = false; userInput.focus(); scrollToBottom();
             }
         }
 
-        // --- Initialization ---
         function initializeApp() {
             applySavedTheme();
-            userInput.focus();
             setTimeout(() => {
-                if (typeof window.__licenseKey === 'undefined' || !window.__licenseKey) {
-                    console.warn("License key not found.");
-                    const initialMessage = document.querySelector('.initial-message');
-                    if (initialMessage) {
-                        const introLine = initialMessage.querySelector('.intro-line');
-                        introLine.textContent = "License key is missing. Please restart Anki.";
-                        introLine.classList.add('error');
-                    }
-                    userInput.disabled = true; sendButton.disabled = true; userInput.placeholder = "License key required.";
-                } else { console.log("License key detected."); }
-            }, 1500); 
+                if (!window.__licenseKey) {
+                   const intro = document.querySelector('.intro-line');
+                   if(intro) { intro.innerText = "Please restart Anki to load your License Key."; intro.style.color="#ff3b30"; }
+                }
+            }, 1000); 
         }
 
         initializeApp();
