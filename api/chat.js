@@ -45,6 +45,7 @@ export default async function handler(req, res) {
    - Use \`<summary>\` for the heading. **Do NOT use Emojis in the summary.** Keep headings short and professional.
    - Inside details, put the content.
    - Only use the collapsing sections for long explanations, if the answer is really short dont use collapsing sections.
+   - If you use collapsing sections make every new main topic its own collapsing section. For long anwsers there should be 3-5 collapsing sections per answer.
 3. **STYLING:**
    - Do NOT use Emojis at all.
    - Use \`<strong>\` for bold text.
