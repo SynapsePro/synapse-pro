@@ -446,6 +446,14 @@
         }
 
         async function handleSend(inputElement) {
+            // TRIAL PROTECTION: If it's a 16-digit Trial ID, block manual user-input
+            if (window.__licenseKey && window.__licenseKey.length === 16) {
+                if (inputElement.id === 'user-input') {
+                    alert("Trial Mode: Manual chat is disabled. Please use the automated buttons in Anki.");
+                    return;
+                }
+            }
+
             const inputText = inputElement.value.trim(); if (!inputText) return;
             document.querySelectorAll('.follow-up-buttons').forEach(area => area.remove());
             
@@ -496,15 +504,24 @@
                 const errElem = createMessageElement("Connection Error.", 'bot', false, true);
                 if (currentThinking) currentThinking.replaceWith(errElem); else responseOutput.appendChild(errElem);
             } finally {
-                userInput.disabled = false; sendButton.disabled = false; userInput.focus(); scrollToBottom();
+                userInput.disabled = (window.__licenseKey && window.__licenseKey.length === 16); 
+                sendButton.disabled = (window.__licenseKey && window.__licenseKey.length === 16); 
+                if (!userInput.disabled) userInput.focus(); 
+                scrollToBottom();
             }
         }
 
         function initializeApp() {
             setTimeout(() => {
+                const intro = document.querySelector('.intro-line');
                 if (!window.__licenseKey) {
-                   const intro = document.querySelector('.intro-line');
                    if(intro) { intro.innerText = "Please restart Anki to load your License Key."; intro.style.color="#ff3b30"; }
+                } else if (window.__licenseKey.length === 16) {
+                    // TRIAL MODE UI
+                    if(intro) { intro.innerText = "Trial Mode: You have 5 free requests. Manual chat is disabled during trial."; }
+                    userInput.disabled = true;
+                    userInput.placeholder = "Trial Mode: Use buttons in Anki...";
+                    sendButton.disabled = true;
                 }
             }, 1000); 
         }
