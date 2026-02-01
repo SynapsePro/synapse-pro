@@ -10,34 +10,71 @@ export default async function handler(req, res) {
         return res.status(405).end(`Method ${req.method} Not Allowed`);
     }
 
-    const { userMessage, chatHistory, apiKey: userApiKey } = req.body;
+    const { userMessage, chatHistory, apiKey: userProvidedKey } = req.body;
     let keyIncremented = false;
 
     try {
         if (!userMessage) return res.status(400).json({ error: 'userMessage fehlt.' });
-        if (!userApiKey) return res.status(401).json({ error: "API Key is required." });
+        if (!userProvidedKey) return res.status(401).json({ error: "API Key/License is required." });
 
-        // TRIAL LOGIK: Wenn der Key exakt 16 Stellen hat und nur aus Zahlen besteht,
-        // überspringen wir die Redis-Prüfung (die Begrenzung auf 5 erfolgt lokal in Python).
-        const isTrial = userApiKey.length === 16 && /^\d+$/.test(userApiKey);
+        // --- KEY TYPE DETECTION ---
+        // 1. Custom Key (BYOK): Startet mit "sk-or-" (OpenRouter Standard)
+        const isCustomKey = userProvidedKey.startsWith('sk-or-');
+        
+        // 2. Trial Key: Exakt 16 Zahlen (wird vom Python-Skript generiert)
+        const isTrial = !isCustomKey && userProvidedKey.length === 16 && /^\d+$/.test(userProvidedKey);
 
-        if (!isTrial) {
-            const requestCount = await redis.get(userApiKey);
-            if (requestCount === null) return res.status(401).json({ error: "Invalid API Key." });
-            if (requestCount >= REQUEST_LIMIT) return res.status(429).json({ error: "Limit reached." });
+        // 3. Synapse License: Alles andere (in der Regel UUIDs)
+        const isSynapseLicense = !isCustomKey && !isTrial;
+
+        let tokenToUse = process.env.OPENROUTER_API_KEY;
+
+        // --- LOGIC SWITCH ---
+        
+        if (isCustomKey) {
+            // FALL A: User nutzt eigenen Key
+            // -> Keine Redis Checks
+            // -> Keine Limits unsererseits
+            // -> Wir nutzen den Key des Users für den Fetch
+            tokenToUse = userProvidedKey;
             
-            await redis.incr(userApiKey);
+        } else if (isTrial) {
+            // FALL B: Trial Mode
+            // -> Python-Addon limitiert auf 5 Versuche lokal.
+            // -> Wir überspringen Redis hier (spart Datenbank-Calls).
+            // -> Wir zahlen (nutzen Server ENV Key).
+            if (!tokenToUse) return res.status(500).json({ error: 'Server Config Error (Trial).' });
+
+        } else if (isSynapseLicense) {
+            // FALL C: Standard Synapse Lizenz
+            // -> Wir müssen prüfen, ob der Key gültig ist (via Redis Existenz/Limit).
+            // -> Wir zahlen.
+            
+            if (!tokenToUse) return res.status(500).json({ error: 'Server Config Error (License).' });
+
+            const requestCount = await redis.get(userProvidedKey);
+            
+            // Wenn Key nicht in Redis gefunden wurde -> Ungültig
+            if (requestCount === null) {
+                return res.status(401).json({ error: "Invalid Synapse License Key." });
+            }
+            
+            // Limit Check
+            if (requestCount >= REQUEST_LIMIT) {
+                return res.status(429).json({ error: "Monthly limit reached." });
+            }
+            
+            // Zähler erhöhen
+            await redis.incr(userProvidedKey);
             keyIncremented = true;
         }
 
-        const history = Array.isArray(chatHistory) ? chatHistory : [];
-        const openRouterApiKey = process.env.OPENROUTER_API_KEY;
-        const modelName = process.env.OPENROUTER_MODEL_NAME || 'openai/gpt-oss-120b';
+        // --- PREPARE FETCH ---
 
-        if (!openRouterApiKey) {
-            if (keyIncremented) await redis.decr(userApiKey);
-            return res.status(500).json({ error: 'Server Config Error.' });
-        }
+        const history = Array.isArray(chatHistory) ? chatHistory : [];
+        // Falls der User seinen eigenen Key nutzt, nutzen wir trotzdem das Standard-Modell, 
+        // es sei denn, du willst das konfigurierbar machen.
+        const modelName = process.env.OPENROUTER_MODEL_NAME || 'openai/gpt-oss-120b';
 
         const systemPrompt = { 
             role: "system", 
@@ -63,10 +100,12 @@ Ensure the explanation is clear, spacious, and medically accurate.`
 
         const messagesToSend = [systemPrompt, ...history, { role: "user", content: userMessage }];
 
+        // --- EXECUTE FETCH ---
+        
         const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
             method: 'POST',
             headers: {
-                'Authorization': `Bearer ${openRouterApiKey}`,
+                'Authorization': `Bearer ${tokenToUse}`, // Hier wird der entsprechende Key genutzt
                 'Content-Type': 'application/json',
                 'HTTP-Referer': process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000',
                 'X-Title': 'Synapse Pro'
@@ -75,8 +114,16 @@ Ensure the explanation is clear, spacious, and medically accurate.`
         });
 
         if (!response.ok) {
-            if (keyIncremented) await redis.decr(userApiKey);
+            // Falls es ein Synapse Key war und der Request fehlschlug, Zähler zurücksetzen
+            if (keyIncremented) await redis.decr(userProvidedKey);
+            
             const err = await response.json().catch(() => ({}));
+            
+            // Spezielle Fehlermeldung für Custom Keys
+            if (isCustomKey && response.status === 401) {
+                return res.status(401).json({ error: "Your Custom OpenRouter Key is invalid or has no credits." });
+            }
+
             return res.status(response.status).json({ error: err.error?.message || response.statusText });
         }
 
@@ -84,7 +131,8 @@ Ensure the explanation is clear, spacious, and medically accurate.`
         res.status(200).json(data);
 
     } catch (error) {
-        if (keyIncremented) await redis.decr(userApiKey);
+        console.error("API Error:", error);
+        if (keyIncremented) await redis.decr(userProvidedKey);
         res.status(500).json({ error: 'Internal Server Error.' });
     }
 }
