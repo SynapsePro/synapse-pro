@@ -1,3 +1,5 @@
+--- START OF FILE text/html ---
+
 <!DOCTYPE html>
 <html lang="de">
 <head>
@@ -446,8 +448,14 @@
         }
 
         async function handleSend(inputElement) {
-            // TRIAL PROTECTION: If it's a 16-digit Trial ID, block manual user-input
-            if (window.__licenseKey && window.__licenseKey.length === 16) {
+            const licenseKey = window.__licenseKey || null;
+
+            // TRIAL CHECK
+            // Definition of Trial in JS: Key has exactly 16 digits and contains only numbers.
+            // Custom Keys (sk-or-...) and Synapse Keys (UUIDs) do NOT match this.
+            const isTrial = licenseKey && licenseKey.length === 16 && /^\d+$/.test(licenseKey);
+
+            if (isTrial) {
                 if (inputElement.id === 'user-input') {
                     alert("Trial Mode: Manual chat is disabled. Please use the automated buttons in Anki.");
                     return;
@@ -475,7 +483,6 @@
             scrollToBottom();
 
             try {
-                const licenseKey = window.__licenseKey || null;
                 const response = await fetch(BACKEND_API_URL, {
                     method: 'POST', headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ userMessage: inputText, chatHistory, apiKey: licenseKey })
@@ -483,7 +490,10 @@
                 
                 const currentThinking = document.querySelector(`[data-thinking-id="${thinkingMsg.dataset.thinkingId}"]`);
                 
-                if (!response.ok) throw new Error(response.statusText);
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({}));
+                    throw new Error(errorData.error || response.statusText);
+                }
 
                 const data = await response.json();
                 const botReply = data.choices?.[0]?.message?.content || "No response.";
@@ -501,11 +511,23 @@
 
             } catch (error) {
                 const currentThinking = document.querySelector(`[data-thinking-id="${thinkingMsg.dataset.thinkingId}"]`);
-                const errElem = createMessageElement("Connection Error.", 'bot', false, true);
+                // Format error message for better user understanding
+                let errorMsg = "Connection Error.";
+                if (error.message.includes("Trial")) errorMsg = "Trial Limit Reached.";
+                else if (error.message.includes("License")) errorMsg = "Invalid License.";
+                else if (error.message.includes("Custom")) errorMsg = "Check your OpenRouter Key.";
+                else if (error.message) errorMsg = error.message;
+
+                const errElem = createMessageElement(errorMsg, 'bot', false, true);
                 if (currentThinking) currentThinking.replaceWith(errElem); else responseOutput.appendChild(errElem);
             } finally {
-                userInput.disabled = (window.__licenseKey && window.__licenseKey.length === 16); 
-                sendButton.disabled = (window.__licenseKey && window.__licenseKey.length === 16); 
+                // Re-enable inputs ONLY if NOT in trial mode
+                // Re-calculate isTrial to be safe
+                const stillTrial = licenseKey && licenseKey.length === 16 && /^\d+$/.test(licenseKey);
+                
+                userInput.disabled = stillTrial; 
+                sendButton.disabled = stillTrial; 
+                
                 if (!userInput.disabled) userInput.focus(); 
                 scrollToBottom();
             }
@@ -514,14 +536,30 @@
         function initializeApp() {
             setTimeout(() => {
                 const intro = document.querySelector('.intro-line');
-                if (!window.__licenseKey) {
+                const key = window.__licenseKey;
+                
+                if (!key) {
                    if(intro) { intro.innerText = "Please restart Anki to load your License Key."; intro.style.color="#ff3b30"; }
-                } else if (window.__licenseKey.length === 16) {
-                    // TRIAL MODE UI
-                    if(intro) { intro.innerText = "Trial Mode: You have 5 free requests. Manual chat is disabled during trial."; }
-                    userInput.disabled = true;
-                    userInput.placeholder = "Trial Mode: Use buttons in Anki...";
-                    sendButton.disabled = true;
+                } else {
+                    const isTrial = key.length === 16 && /^\d+$/.test(key);
+                    const isCustom = key.startsWith("sk-or-");
+                    
+                    if (isTrial) {
+                        // TRIAL MODE UI
+                        if(intro) { intro.innerText = "Trial Mode: You have 5 free requests. Manual chat is disabled during trial."; }
+                        userInput.disabled = true;
+                        userInput.placeholder = "Trial Mode: Use buttons in Anki...";
+                        sendButton.disabled = true;
+                    } else if (isCustom) {
+                        // CUSTOM KEY UI
+                         if(intro) { intro.innerText = "Active (Own Key). Click buttons above or chat below."; }
+                         userInput.disabled = false;
+                         userInput.placeholder = "Ask a question (using your key)...";
+                    } else {
+                        // FULL LICENSE UI
+                        // Standard text is fine, or update if desired
+                        userInput.disabled = false;
+                    }
                 }
             }, 1000); 
         }
