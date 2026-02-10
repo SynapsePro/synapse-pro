@@ -61,7 +61,7 @@ export default async function handler(req, res) {
             
             // Limit Check
             if (requestCount >= REQUEST_LIMIT) {
-                return res.status(429).json({ error: "Monthly limit reached." });
+                return res.status(429).json({ error: "1000 request limit reached. For new Key go to www.synapse-pro.de." });
             }
             
             // Zähler erhöhen
