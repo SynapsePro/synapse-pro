@@ -1,7 +1,7 @@
 // /api/chat.js
 import { Redis } from '@upstash/redis';
 
-const REQUEST_LIMIT = 10000;
+const REQUEST_LIMIT = 1000;
 const redis = Redis.fromEnv();
 
 export default async function handler(req, res) {
