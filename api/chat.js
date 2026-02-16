@@ -74,7 +74,7 @@ export default async function handler(req, res) {
         const history = Array.isArray(chatHistory) ? chatHistory : [];
         // Falls der User seinen eigenen Key nutzt, nutzen wir trotzdem das Standard-Modell, 
         // es sei denn, du willst das konfigurierbar machen.
-        const modelName = process.env.OPENROUTER_MODEL_NAME || 'openai/gpt-oss-120b';
+        const modelName = process.env.OPENROUTER_MODEL_NAME || 'openai/gpt-oss-20b';
 
         const systemPrompt = { 
             role: "system", 
